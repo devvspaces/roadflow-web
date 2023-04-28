@@ -1,10 +1,12 @@
 import Head from 'next/head'
-import { Accordion, AccordionButton, AccordionIcon, AccordionItem, AccordionPanel, Badge, Box, Button, Card, CardBody, CardHeader, Container, Divider, FormControl, HStack, Heading, Highlight, IconButton, Input, List, ListIcon, ListItem, Progress, Stack, Text, VStack, useColorModeValue } from '@chakra-ui/react';
-import { CheckCircleIcon, SearchIcon, StarIcon, TimeIcon } from '@chakra-ui/icons';
+import { Badge, Box, Card, CardBody, CardHeader, Container, Divider, HStack, Heading, Highlight, Progress, Stack, Text, useColorModeValue } from '@chakra-ui/react';
 import CurriculumCardComponent, { CurriculumCard } from '@/components/pages/curriculum/curriculum-card';
+import { useCurrentUser } from '@/common/hooks/useCurrentUser';
 
 export default function Roles() {
   const heroBg = useColorModeValue('blue.100', 'blue.900');
+
+  const user = useCurrentUser()
 
   const curriculums: CurriculumCard[] = [
     {
@@ -44,29 +46,8 @@ export default function Roles() {
         <title>RoadFlow - Home</title>
       </Head>
 
-      <Box width={"100%"} bg={heroBg} textAlign={'center'}>
-        <Container maxW={'1300px'} py={"3rem"} px={{ "lg": 0, 'md': 10, 'sm': '10' }}>
-          <Stack
-            spacing={10}>
-            <Heading
-              bgGradient='linear(to-l, #7928CA, #FF0080)'
-              bgClip='text'
-              fontSize='6xl'
-              lineHeight={'5rem'}
-              fontWeight='extrabold'>
-              Welcome back, Ayomide
-            </Heading>
-            <Text>
-              <Highlight query='good work!' styles={{ fontWeight: '600', px: '2', py: '2', bg: 'green.100', rounded: 'full' }}>
-                You have 3 curriculums in progress. Keep up the good work!
-              </Highlight>
-            </Text>
-          </Stack>
-        </Container>
-      </Box>
-
       <Box width={"100%"}>
-        <Container maxW={'1300px'} py={"3rem"} px={{ "lg": 0, 'md': 10, 'sm': '10' }}>
+        <Container maxW={'1300px'}>
           <Stack mb={10}>
             <Heading
               fontSize={'x-large'}
@@ -165,8 +146,8 @@ export default function Roles() {
 
             </HStack>
           </Stack>
-          
-          <Divider my={"3rem"}/>
+
+          <Divider my={"3rem"} />
 
           <Stack>
 

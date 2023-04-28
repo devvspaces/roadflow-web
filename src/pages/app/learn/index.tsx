@@ -33,7 +33,7 @@ export default function Page() {
       </Head>
 
       <Box
-        display={isOpen ? 'block' : 'none'}
+        display={!isOpen ? 'block' : 'none'}
       >
         <Heading size={"md"}>What is the Web?</Heading>
         <Box className='topic-content'
@@ -141,7 +141,7 @@ export default function Page() {
       {/* Quiz */}
 
       <Box
-        display={!isOpen ? 'block' : 'none'}
+        display={isOpen ? 'block' : 'none'}
       >
 
         <Heading size={"md"}>Lesson Quiz</Heading>

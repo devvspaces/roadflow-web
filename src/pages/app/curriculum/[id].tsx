@@ -13,7 +13,7 @@ export default function Roles() {
       </Head>
 
       <Box width={"100%"} bgGradient='linear(to-l, #7928CA, blue.600)'>
-        <Container maxW={'1300px'} py={"3rem"} px={{ "lg": 0, 'md': 10, 'sm': '10' }}>
+        <Container maxW={'1300px'} py={"3rem"}>
           <HStack>
             <Box>
               <Text
@@ -63,11 +63,10 @@ export default function Roles() {
               </Button>
             </Box>
           </HStack>
-
         </Container>
       </Box>
 
-      <Container maxW={'1300px'} py={"3rem"} px={{ "lg": 0, 'md': 10, 'sm': '10' }}>
+      <Container maxW={'1300px'} py={"3rem"}>
 
         <HStack
         wrap={'wrap'}

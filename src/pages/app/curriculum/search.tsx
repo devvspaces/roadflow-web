@@ -1,40 +1,55 @@
+import React, { useState, useEffect } from 'react';
 import Head from 'next/head'
 import { Box, Container, FormControl, HStack, Heading, IconButton, Input, Stack, Text } from '@chakra-ui/react';
 import { SearchIcon } from '@chakra-ui/icons';
 import CurriculumCardComponent, { CurriculumCard } from '@/components/pages/curriculum/curriculum-card';
+import { api } from '@/services/api';
+import { getDifficulty } from '@/common/interfaces/curriculum';
+import { useFormik } from 'formik';
+import { modifyUrl } from '@/common/url';
 
 export default function SearchCurriculum() {
+  const [curriculums, setCurriculums] = useState<CurriculumCard[]>([])
 
-  const curriculums: CurriculumCard[] = [
-    {
-      name: 'Learn Python Beginners',
-      description: 'Caffè latte is a coffee beverage of Italian origin made with espresso and steamed milk.',
-      level: 'beginner',
-      duration: 3,
-      rating: 4.5,
+  const getCurriculums = async ({ search }: { search?: string }) => {
+    const response = await api.get_curriculums({
+      search: search || ""
+    })
+    if (response.success) {
+      const items = response.result.data?.results || [];
+      const pItems = items.map((item) => ({
+        name: item.name,
+        description: item.description,
+        level: getDifficulty(item.difficulty),
+        duration: item.weeks,
+        rating: item.rating
+      }))
+      setCurriculums(pItems)
+    }
+    console.error("Error loading curriculums");
+  }
+
+  useEffect(() => {
+    const search = new URLSearchParams(window.location.search)
+    getCurriculums({
+      search: search.get("search") || ""
+    });
+  }, [])
+
+  const formik = useFormik({
+    initialValues: {
+      search: "",
     },
-    {
-      name: 'Learn Python Beginners',
-      description: 'Caffè latte is a coffee beverage of Italian origin made with espresso and steamed milk.',
-      level: 'beginner',
-      duration: 3,
-      rating: 4.5,
-    },
-    {
-      name: 'Learn Python Beginners',
-      description: 'Caffè latte is a coffee beverage of Italian origin made with espresso and steamed milk.',
-      level: 'beginner',
-      duration: 3,
-      rating: 4.5,
-    },
-    {
-      name: 'Learn Python Beginners',
-      description: 'Caffè latte is a coffee beverage of Italian origin made with espresso and steamed milk.',
-      level: 'beginner',
-      duration: 3,
-      rating: 4.5,
-    },
-  ]
+    onSubmit: async (values) => {
+      const url_param = new URLSearchParams()
+      url_param.append("search", values.search)
+      const url = `${window.location.origin}/${window.location.pathname}?${url_param.toString()}`
+      modifyUrl("search", url);
+      getCurriculums({
+        search: values.search
+      });
+    }
+  });
 
   return (
     <>
@@ -59,21 +74,34 @@ export default function SearchCurriculum() {
             You can search for new curriculums here. There are labeled with difficulty level and duration.
           </Text>
 
-          <HStack gap={4} spacing={0} wrap={'wrap'} justify={'center'}>
-            <FormControl maxW={'500px'}>
-              <Input h={14} py={5} px={5} borderRadius={30} type='email' placeholder='Search for curriculums' />
-            </FormControl>
+          <form onSubmit={formik.handleSubmit}>
+            <HStack gap={4} spacing={0} wrap={'wrap'} justify={'center'}>
+              <FormControl id='search' maxW={'500px'}>
+                <Input
+                  h={14}
+                  py={5}
+                  px={5}
+                  borderRadius={30}
+                  type='text'
+                  placeholder='Search for curriculums'
+                  onChange={formik.handleChange}
+                  value={formik.values.search}
+                  isRequired
+                />
+              </FormControl>
 
-            <IconButton
-              size={'md'}
-              icon={<SearchIcon />}
-              colorScheme='blue'
-              aria-label={'Search database'}
-              h={14}
-              w={14}
-              borderRadius={30}
-            />
-          </HStack>
+              <IconButton
+                size={'md'}
+                icon={<SearchIcon />}
+                colorScheme='blue'
+                aria-label={'Search database'}
+                h={14}
+                w={14}
+                borderRadius={30}
+                type={'submit'}
+              />
+            </HStack>
+          </form>
         </Stack>
 
         <Stack
@@ -90,103 +118,6 @@ export default function SearchCurriculum() {
             })
           }
         </Stack>
-
-        {/* Pagination */}
-
-        {/* Create a great pagination */}
-
-        <HStack
-          justify={'center'}
-          gridGap={4}
-          mt={10}
-          fontSize={'12px'}
-          spacing={0}>
-            <Box
-            bg={'gray.100'}
-            display={'flex'}
-            alignItems={'center'}
-            justifyContent={'center'}
-            cursor={'pointer'}
-            p={2}
-            px={3}
-            rounded={'md'}
-          >
-            <Text>First</Text>
-          </Box>
-            <Box
-            bg={'gray.100'}
-            display={'flex'}
-            alignItems={'center'}
-            justifyContent={'center'}
-            cursor={'pointer'}
-            p={2}
-            px={3}
-            rounded={'md'}
-          >
-            <Text>Prev</Text>
-          </Box>
-          <Box
-            bg={'gray.100'}
-            display={'flex'}
-            alignItems={'center'}
-            justifyContent={'center'}
-            cursor={'pointer'}
-            p={2}
-            px={3}
-            rounded={'md'}
-          >
-            <Text>1</Text>
-          </Box>
-          <Box
-            bg={'blue.300'}
-            display={'flex'}
-            alignItems={'center'}
-            justifyContent={'center'}
-            cursor={'pointer'}
-            p={2}
-            px={3}
-            rounded={'md'}
-          >
-            <Text>2</Text>
-          </Box>
-          <Box
-            bg={'gray.100'}
-            display={'flex'}
-            alignItems={'center'}
-            justifyContent={'center'}
-            cursor={'pointer'}
-            p={2}
-            px={3}
-            rounded={'md'}
-          >
-            <Text>3</Text>
-          </Box>
-          <Box
-            bg={'gray.100'}
-            display={'flex'}
-            alignItems={'center'}
-            justifyContent={'center'}
-            cursor={'pointer'}
-            p={2}
-            px={3}
-            rounded={'md'}
-          >
-            <Text>Next</Text>
-          </Box>
-          <Box
-            bg={'gray.100'}
-            display={'flex'}
-            alignItems={'center'}
-            justifyContent={'center'}
-            cursor={'pointer'}
-            p={2}
-            px={3}
-            rounded={'md'}
-          >
-            <Text>Last</Text>
-          </Box>
-
-        </HStack>
       </Container>
     </>
   );
