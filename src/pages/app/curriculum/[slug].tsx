@@ -9,9 +9,20 @@ import { SyllabiWeek } from '@/components/week';
 import { GetServerSideProps, InferGetServerSidePropsType } from 'next';
 import { getAccessTokenServerSide } from '@/services/authenticate';
 import NextLink from 'next/link';
+import { useRouter } from 'next/router';
 
 export default function Page({ data }: InferGetServerSidePropsType<typeof getServerSideProps>) {
   const curriculum = data;
+  const router = useRouter()
+
+  const registerUser = async () => {
+    const response = await api.enroll_user(data.slug)
+    if (response.success) {
+      router.push(`/app/curriculum/learn/${encodeURIComponent(data.slug)}/home`)
+      return
+    }
+    throw new Error("Failed to enroll")
+  }
 
   return (
     <>
@@ -57,29 +68,51 @@ export default function Page({ data }: InferGetServerSidePropsType<typeof getSer
                 <Badge colorScheme='red'>{curriculum.level}</Badge>
                 <Badge colorScheme='teal'>{curriculum.syllabus.length} weeks</Badge>
               </HStack>
-
-              <Button
-                as={NextLink}
-                transition={'.3s'}
-                bgGradient='linear(to-l, purple.700, #FF0080)'
-                color='white'
-                rounded={'5px'}
-                bgSize={'100%'}
-                p={6}
-                _hover={{
-                  bgGradient: 'linear(to-l, purple.700, #FF0080)',
-                  bgSize: '200%'
-                }}
-                href={
-                  data.is_enrolled
-                  ? `/app/curriculum/learn/${encodeURIComponent(data.slug)}/home`
-                  : "#"
-                }
-                py={8}>
-                {
-                  data.is_enrolled ? "Continue" : "Enroll for free"
-                }
-              </Button>
+              {
+                data.is_enrolled
+                  ? (
+                    <Button
+                      as={NextLink}
+                      transition={'.3s'}
+                      bgGradient='linear(to-l, purple.700, #FF0080)'
+                      color='white'
+                      rounded={'5px'}
+                      bgSize={'100%'}
+                      p={6}
+                      _hover={{
+                        bgGradient: 'linear(to-l, purple.700, #FF0080)',
+                        bgSize: '200%'
+                      }}
+                      href={`/app/curriculum/learn/${encodeURIComponent(data.slug)}/home`}
+                      py={8}
+                    >
+                      Continue
+                    </Button>
+                  )
+                  : (
+                    <Button
+                      as={NextLink}
+                      transition={'.3s'}
+                      bgGradient='linear(to-l, purple.700, #FF0080)'
+                      color='white'
+                      rounded={'5px'}
+                      bgSize={'100%'}
+                      p={6}
+                      _hover={{
+                        bgGradient: 'linear(to-l, purple.700, #FF0080)',
+                        bgSize: '200%'
+                      }}
+                      href={"#"}
+                      py={8}
+                      onClick={async (e) => {
+                        e.preventDefault()
+                        await registerUser()
+                      }}
+                    >
+                      Enroll for free
+                    </Button>
+                  )
+              }
             </Box>
           </HStack>
         </Container>

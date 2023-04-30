@@ -70,6 +70,11 @@ export interface CurriculumPageResponse extends CurriculumListResponse {
   syllabus: CurriculumSyllabi[];
 }
 
+export interface CurriculumWithResources extends CurriculumListResponse {
+  resources: Resource[];
+  syllabus: EnrolledCurriculumSyllabi[];
+}
+
 export interface EnrolledCurriculumPageResponse extends CurriculumListResponse {
   syllabus: EnrolledCurriculumSyllabi[];
 }
@@ -80,4 +85,13 @@ export interface SyllabiTopicResponse {
   topic: SyllabiTopicWithResources;
   completed: boolean;
   completed_at: string;
+}
+
+export interface EnrolledCurriculumsResponse {
+  id: number;
+  completed_weeks: number;
+  curriculum: CurriculumListResponse;
+  completed: boolean;
+  progress: number;
+  enrolled_at: string;
 }

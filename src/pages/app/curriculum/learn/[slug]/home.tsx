@@ -1,4 +1,4 @@
-import React, { ReactElement } from 'react'
+import React, { ReactElement, useState, useEffect } from 'react'
 import {
   Box,
   Heading,
@@ -19,19 +19,20 @@ import { setHeadState, setNavState } from '@/store/learnNavSlice';
 export default function Page({ data }: InferGetServerSidePropsType<typeof getServerSideProps>) {
   const dispatch = useDispatch()
 
-  dispatch(setNavState(data.syllabus.map((item, index) => {
-    if (item.topics.length == 0)
-    {
-      throw new Error("Invalid response");
-    }
-    return {
-      name: `Week ${index + 1}`,
-      completed: item.completed,
-      link: `/app/curriculum/learn/${data.slug}/${item.topics[0].slug}`
-    }
-  })));
+  useEffect(() => {
+    dispatch(setNavState(data.syllabus.map((item, index) => {
+      if (item.topics.length == 0) {
+        throw new Error("Invalid response");
+      }
+      return {
+        name: `Week ${index + 1}`,
+        completed: item.completed,
+        link: `/app/curriculum/learn/${data.slug}/${item.topics[0].slug}`
+      }
+    })));
 
-  dispatch(setHeadState(data.name));
+    dispatch(setHeadState(data.name));
+  }, [dispatch, data])
 
   return (
     <>

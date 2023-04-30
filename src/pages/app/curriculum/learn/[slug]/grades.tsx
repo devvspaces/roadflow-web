@@ -1,4 +1,4 @@
-import React, { ReactElement } from 'react'
+import React, { ReactElement, useEffect } from 'react'
 import {
   Box,
   Heading,
@@ -21,8 +21,31 @@ import {
 } from '@chakra-ui/react';
 import Head from 'next/head';
 import LearnLayout from '@/components/layouts/learn';
+import { Grades } from '@/common/interfaces/grades';
+import { GetServerSideProps, InferGetServerSidePropsType } from 'next';
+import { getAccessTokenServerSide } from '@/services/authenticate';
+import { api } from '@/services/api';
+import { useDispatch } from 'react-redux';
+import { setHeadState, setNavState } from '@/store/learnNavSlice';
 
-export default function Page() {
+export default function Page({ data }: InferGetServerSidePropsType<typeof getServerSideProps>) {
+
+  const dispatch = useDispatch()
+
+  useEffect(() => {
+    dispatch(setNavState(data.curriculum.syllabus.map((item, index) => {
+      if (item.topics.length == 0) {
+        throw new Error("Invalid response");
+      }
+      return {
+        name: `Week ${index + 1}`,
+        completed: item.completed,
+        link: `/app/curriculum/learn/${data.curriculum.slug}/${item.topics[0].slug}`
+      }
+    })));
+
+    dispatch(setHeadState(data.curriculum.name));
+  }, [dispatch, data])
 
   return (
     <>
@@ -53,11 +76,11 @@ export default function Page() {
               </Thead>
               <Tbody>
                 {
-                  [1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((week, index) => (
+                  data.progress.map((progress, index) => (
                     <Tr key={index}>
-                      <Td>{week}</Td>
-                      <Td>What is Web Development</Td>
-                      <Td isNumeric>45</Td>
+                      <Td>{progress.syllabi.title}</Td>
+                      <Td>{progress.topic.title}</Td>
+                      <Td isNumeric>{progress.quiz_mark}</Td>
                     </Tr>
                   ))
                 }
@@ -85,3 +108,36 @@ Page.getLayout = function getLayout(page: ReactElement) {
     </LearnLayout>
   )
 }
+
+export const getServerSideProps: GetServerSideProps<{
+  data: Grades
+}> = async ({ params, req }) => {
+
+  if (!params) {
+    return {
+      notFound: true,
+    }
+  }
+
+  const { slug } = params;
+  api.getAccessToken = () => getAccessTokenServerSide(req)
+  const response = await api.get_curriculum_with_grades(slug as string);
+  if (!response.success) {
+    return {
+      notFound: true,
+    }
+  }
+
+  const data = response.result.data;
+  if (!data) {
+    throw new Error("Invalid response");
+  }
+
+  return {
+    props: {
+      data
+    },
+  }
+}
+
+

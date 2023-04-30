@@ -22,10 +22,11 @@ import {
   DrawerCloseButton,
   useColorModeValue,
 } from '@chakra-ui/react';
-import { FaGraduationCap, FaProjectDiagram, FaUser, FaYoutube } from 'react-icons/fa';
+import { FaGraduationCap, FaHeart, FaProjectDiagram, FaUser, FaYoutube } from 'react-icons/fa';
 import { useSelector } from 'react-redux';
 import { selectHeadState, selectNavState } from '@/store/learnNavSlice';
 import { useRouter } from 'next/router'
+import NextLink from 'next/link';
 
 
 interface LearnLayoutProps {
@@ -48,6 +49,7 @@ export default function LearnLayout({ children }: LearnLayoutProps) {
   const navBottomLinkBgHover = useColorModeValue('gray.700', 'gray.500');
 
   const router = useRouter()
+  const { slug } = router.query
 
   function getMenu() {
     return (
@@ -91,19 +93,18 @@ export default function LearnLayout({ children }: LearnLayoutProps) {
             [
               {
                 title: 'Grades',
-                icon: <FaGraduationCap />
+                icon: <FaGraduationCap />,
+                link: `/app/curriculum/learn/${slug as string}/grades`
               },
-              {
-                title: 'Classmates',
-                icon: <FaUser />
-              },
-              // {
-              //   title: 'Projects',
-              //   icon: <FaProjectDiagram />
-              // },
               {
                 title: 'External Courses',
-                icon: <FaYoutube />
+                icon: <FaYoutube />,
+                link: `/app/curriculum/learn/${slug as string}/courses`
+              },
+              {
+                title: 'Rate',
+                icon: <FaHeart />,
+                link: `/app/curriculum/learn/${slug as string}/rate`
               },
             ].map((item, index) => (
               <Box key={index}
@@ -120,6 +121,9 @@ export default function LearnLayout({ children }: LearnLayoutProps) {
                 boxShadow={'md'}
                 _hover={{
                   bg: navBottomLinkBgHover,
+                }}
+                onClick={(e) => {
+                  router.push(item.link)
                 }}
               >
                 {item.icon}
@@ -179,15 +183,10 @@ export default function LearnLayout({ children }: LearnLayoutProps) {
               <Breadcrumb
                 opacity={.8}>
                 <BreadcrumbItem>
-                  <BreadcrumbLink href='#'>Home</BreadcrumbLink>
-                </BreadcrumbItem>
-
-                <BreadcrumbItem>
-                  <BreadcrumbLink href='#'>Docs</BreadcrumbLink>
-                </BreadcrumbItem>
-
-                <BreadcrumbItem isCurrentPage>
-                  <BreadcrumbLink href='#'>Breadcrumb</BreadcrumbLink>
+                  <BreadcrumbLink
+                  as={NextLink}
+                  href={`/app/curriculum/learn/${slug as string}/home`}
+                  >Home</BreadcrumbLink>
                 </BreadcrumbItem>
               </Breadcrumb>
 

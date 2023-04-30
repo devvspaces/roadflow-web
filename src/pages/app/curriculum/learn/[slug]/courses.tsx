@@ -1,4 +1,4 @@
-import React, { ReactElement } from 'react'
+import React, { ReactElement, useEffect } from 'react'
 import {
   Box,
   Heading,
@@ -15,13 +15,37 @@ import {
 import Head from 'next/head';
 import LearnLayout from '@/components/layouts/learn';
 import { FaExternalLinkAlt } from 'react-icons/fa';
+import { getAccessTokenServerSide } from '@/services/authenticate';
+import { api } from '@/services/api';
+import { GetServerSideProps, InferGetServerSidePropsType } from 'next';
+import { CurriculumWithResources } from '@/common/interfaces/curriculum';
+import { getResource } from '@/common/interfaces/resource';
+import { useDispatch } from 'react-redux';
+import { setHeadState, setNavState } from '@/store/learnNavSlice';
 
-export default function Page() {
+export default function Page({ data }: InferGetServerSidePropsType<typeof getServerSideProps>) {
+
+  const dispatch = useDispatch()
+
+  useEffect(() => {
+    dispatch(setNavState(data.syllabus.map((item, index) => {
+      if (item.topics.length == 0) {
+        throw new Error("Invalid response");
+      }
+      return {
+        name: `Week ${index + 1}`,
+        completed: item.completed,
+        link: `/app/curriculum/learn/${data.slug}/${item.topics[0].slug}`
+      }
+    })));
+
+    dispatch(setHeadState(data.name));
+  }, [dispatch, data])
 
   return (
     <>
       <Head>
-        <title>RoadFlow - Introduction to Web Development (External Courses) </title>
+        <title>RoadFlow - {data.name} (External Courses) </title>
       </Head>
 
       <Heading size={"md"}>External Courses</Heading>
@@ -39,29 +63,7 @@ export default function Page() {
           <Wrap spacing={4}>
 
             {
-              [
-                {
-                  title: 'Learn Web Development in 2021',
-                  author: 'John Doe',
-                  link: '#',
-                  provider: 'Udemy',
-                  type: 'course',
-                },
-                {
-                  title: 'Learn Web Development for Dummies',
-                  author: 'Ken Thompson',
-                  link: '#',
-                  provider: 'Amazon',
-                  type: 'book',
-                },
-                {
-                  title: 'Master Web Development',
-                  author: 'John Doe',
-                  link: '#',
-                  provider: 'Coursera',
-                  type: 'course',
-                }
-              ].map((item, index) => (
+              data.resources.map((item, index) => (
                 <WrapItem
                   key={index}
                 >
@@ -83,7 +85,7 @@ export default function Page() {
                       mb={3}>
                       <Badge
                         colorScheme={'blue'}>
-                        {item.type}
+                        {getResource(item.rtype)}
                       </Badge>
                       <Badge
                         colorScheme={'green'}>
@@ -96,10 +98,10 @@ export default function Page() {
                       color={'blue.500'}
                       mb={3}>
                       <Link
-                        href={item.link}
+                        href={item.url}
                         display={'flex'}
                         gap={4}>
-                        {item.title}
+                        {item.name}
                         <FaExternalLinkAlt />
                       </Link>
                     </Heading>
@@ -118,7 +120,11 @@ export default function Page() {
             }
 
           </Wrap>
-
+          {
+            data.resources.length == 0 && (
+              <Text fontWeight={600} fontSize={'lg'}>No Available Resources</Text>
+            )
+          }
         </Box>
 
       </Box>
@@ -132,4 +138,35 @@ Page.getLayout = function getLayout(page: ReactElement) {
       {page}
     </LearnLayout>
   )
+}
+
+export const getServerSideProps: GetServerSideProps<{
+  data: CurriculumWithResources
+}> = async ({ params, req }) => {
+
+  if (!params) {
+    return {
+      notFound: true,
+    }
+  }
+
+  const { slug } = params;
+  api.getAccessToken = () => getAccessTokenServerSide(req)
+  const response = await api.get_curriculum_with_resources(slug as string);
+  if (!response.success) {
+    return {
+      notFound: true,
+    }
+  }
+
+  const data = response.result.data;
+  if (!data) {
+    throw new Error("Invalid response");
+  }
+
+  return {
+    props: {
+      data
+    },
+  }
 }

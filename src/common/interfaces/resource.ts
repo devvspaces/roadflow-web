@@ -38,5 +38,5 @@ export interface Resource {
   description: string;
   author: string;
   rtype: ResourceType;
-  provider: number;
+  provider: string;
 }

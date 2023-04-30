@@ -2,43 +2,16 @@ import Head from 'next/head'
 import { Badge, Box, Card, CardBody, CardHeader, Container, Divider, HStack, Heading, Highlight, Progress, Stack, Text, useColorModeValue } from '@chakra-ui/react';
 import CurriculumCardComponent, { CurriculumCard } from '@/components/pages/curriculum/curriculum-card';
 import { useCurrentUser } from '@/common/hooks/useCurrentUser';
+import { BasicCard } from '@/components/homeCard';
+import { GetServerSideProps, InferGetServerSidePropsType } from 'next';
+import { getAccessTokenServerSide } from '@/services/authenticate';
+import { api } from '@/services/api';
+import { EnrolledCurriculumsResponse, getDifficulty } from '@/common/interfaces/curriculum';
 
-export default function Roles() {
+export default function Page({ curriculums }: InferGetServerSidePropsType<typeof getServerSideProps>) {
   const heroBg = useColorModeValue('blue.100', 'blue.900');
 
   const user = useCurrentUser()
-
-  const curriculums: CurriculumCard[] = [
-    {
-      name: 'Learn Python Beginners',
-      description: 'Caffè latte is a coffee beverage of Italian origin made with espresso and steamed milk.',
-      level: 'beginner',
-      duration: 3,
-      rating: 4.5,
-    },
-    {
-      name: 'Learn Python Beginners',
-      description: 'Caffè latte is a coffee beverage of Italian origin made with espresso and steamed milk.',
-      level: 'beginner',
-      duration: 3,
-      rating: 4.5,
-    },
-    {
-      name: 'Learn Python Beginners',
-      description: 'Caffè latte is a coffee beverage of Italian origin made with espresso and steamed milk.',
-      level: 'beginner',
-      duration: 3,
-      rating: 4.5,
-    },
-    {
-      name: 'Learn Python Beginners',
-      description: 'Caffè latte is a coffee beverage of Italian origin made with espresso and steamed milk.',
-      level: 'beginner',
-      duration: 3,
-      rating: 4.5,
-    },
-  ]
-
 
   return (
     <>
@@ -100,46 +73,15 @@ export default function Roles() {
               gap={8}>
 
               {
-                [1, 2, 3, 4, 5].map((item, index) => {
+                curriculums.map((item, index) => {
                   return (
-                    <Card key={index}
-                      bg={'pink.100'}
-                      transition={'.3s ease'}
-                      cursor={'pointer'}
-                      transformOrigin={'top'}
-                      transform={'scale(1)'}
-                      style={{
-                        transformStyle: 'preserve-3d',
-                      }}
-                      _hover={{
-                        bg: 'pink.300',
-                        transform: 'scale(1.02)',
-                        boxShadow: 'xl',
-                      }}
-                      width={'100%'}
-                      maxW={'500px'}>
-                      <CardHeader>
-                        <Heading
-                          fontWeight={600}
-                          fontSize={'lg'}
-                          mb={3}>
-                          Introduction to Web Development
-                        </Heading>
-
-                        <HStack>
-                          <Badge colorScheme='purple'>
-                            Weeks: 3 / 5
-                          </Badge>
-                          <Badge colorScheme='green'>
-                            Beginner
-                          </Badge>
-                        </HStack>
-                      </CardHeader>
-
-                      <CardBody>
-                        <Progress rounded={'md'} h={2} colorScheme={'blue'} value={80} />
-                      </CardBody>
-                    </Card>
+                    <BasicCard key={index} item={{
+                      title: item.curriculum.name,
+                      badge1: `weeks: ${item.completed_weeks}/${item.curriculum.weeks}`,
+                      badge2: getDifficulty(item.curriculum.difficulty),
+                      link: `/app/curriculum/learn/${item.curriculum.slug}/home`,
+                      progress: item.progress
+                    }} />
                   )
                 })
               }
@@ -147,7 +89,7 @@ export default function Roles() {
             </HStack>
           </Stack>
 
-          <Divider my={"3rem"} />
+          {/* <Divider my={"3rem"} />
 
           <Stack>
 
@@ -170,10 +112,39 @@ export default function Roles() {
                 })
               }
             </Stack>
-          </Stack>
+          </Stack> */}
 
         </Container>
       </Box>
     </>
   );
 }
+
+
+export const getServerSideProps: GetServerSideProps<{
+  curriculums: EnrolledCurriculumsResponse[]
+}> = async ({ req }) => {
+
+  api.getAccessToken = () => getAccessTokenServerSide(req)
+  const response = await api.get_enrolled_curriculums();
+  if (!response.success) {
+    return {
+      notFound: true,
+    }
+  }
+
+  const data = response.result.data;
+  if (!data) {
+    throw new Error("Invalid response");
+  }
+
+  data
+
+  return {
+    props: {
+      curriculums: data.results
+    },
+  }
+}
+
+
