@@ -1,4 +1,4 @@
-import React, { ReactElement } from 'react'
+import React, { ReactElement, useState } from 'react'
 import {
   Box,
   Heading,
@@ -11,35 +11,79 @@ import {
   ListItem,
   Button,
   Center,
-  useDisclosure,
   Highlight,
-  List,
   OrderedList,
   Radio,
   RadioGroup,
 } from '@chakra-ui/react';
 import Head from 'next/head';
 import LearnLayout from '@/components/layouts/learn';
+import { api } from '@/services/api';
+import { getAccessTokenServerSide } from '@/services/authenticate';
+import { GetServerSideProps, InferGetServerSidePropsType } from 'next';
+import { SyllabiTopicResponse } from '@/common/interfaces/curriculum';
+import { useDispatch } from 'react-redux';
+import { setHeadState, setNavState } from '@/store/learnNavSlice';
+import { ResourceType } from '@/common/interfaces/resource';
+import { VideoComponent } from '@/components/video';
 
-export default function Page() {
+export default function Page({ data }: InferGetServerSidePropsType<typeof getServerSideProps>) {
 
-  const { isOpen, onOpen, onClose } = useDisclosure()
-  const [value, setValue] = React.useState('0')
+  const dispatch = useDispatch()
+
+  dispatch(setNavState(data.syllabi.topics.map((item, index) => {
+    return {
+      name: item.title,
+      completed: data.completed,
+      link: `/app/curriculum/learn/${data.syllabi.slug}/${item.slug}`
+    }
+  })));
+
+  dispatch(setHeadState(data.syllabi.title));
+
+  const [quizOpen, openQuiz] = useState(false)
+
+  const toggleQuiz = () => {
+    openQuiz(!quizOpen);
+  }
+
+  const readings: ReactElement[] = []
+  data.topic.resources.forEach((item, index) => {
+    if (item.rtype == ResourceType.Article) {
+      readings.push((
+        <ListItem
+          key={index}>
+          <Link as={'a'} color='blue.500' href={item.url} fontWeight={600}>
+            {item.name}
+          </Link>
+        </ListItem>
+      ))
+    }
+  })
+
+  const videos: ReactElement[] = []
+  data.topic.resources.forEach((item, index) => {
+    if (item.rtype == ResourceType.Video) {
+      videos.push((
+        <VideoComponent key={index} resource={item} />
+      ))
+    }
+  })
 
   return (
     <>
       <Head>
-        <title>RoadFlow - Introduction to Web Development</title>
+        <title>RoadFlow - {data.syllabi.title} : {data.topic.title}</title>
       </Head>
 
       <Box
-        display={!isOpen ? 'block' : 'none'}
+        display={!quizOpen ? 'block' : 'none'}
       >
-        <Heading size={"md"}>What is the Web?</Heading>
+        <Heading size={"md"}>{data.topic.title}</Heading>
         <Box className='topic-content'
           py={5}>
           <Text>
-            The World Wide Web (WWW), commonly known as the Web, is an information system where documents and other web resources are identified by Uniform Resource Locators (URLs, such as https://example.com/), which may be interlinked by hypertext, and are accessible over the Internet.[1][2] The resources of the Web are transferred via the Hypertext Transfer Protocol (HTTP), may be accessed by users by a software application called a web browser, and are published by a software application called a web server. The World Wide Web is not synonymous with the Internet, which pre-dated the Web in some form by over two decades and upon which technologies the Web is built.
+            {data.topic.description}
           </Text>
 
 
@@ -50,14 +94,9 @@ export default function Page() {
             <UnorderedList listStyleType={'none'} m={0} spacing={2}>
 
               {
-                [1, 2, 3].map((item, index) => (
-                  <ListItem
-                    key={index}>
-                    <Link color='blue.500' href="" fontWeight={600}>
-                      What is the Web?
-                    </Link>
-                  </ListItem>
-                ))
+                readings.length > 0
+                  ? readings
+                  : <Text>No Readings</Text>
               }
 
             </UnorderedList>
@@ -68,55 +107,16 @@ export default function Page() {
           <Box py={6}>
             <Heading size={'sm'} mb={3}>Videos</Heading>
 
-            <Wrap spacing={5}>
-              {
-                [1, 2, 3,].map((item, index) => (
-                  <WrapItem
-                    maxW={'400px'}
-                    key={index}>
-                    <Box key={index}
-                      display={'flex'}
-                      alignItems={'center'}
-                      gap={2}
-                      p={4}
-                      color={'gray.200'}
-                      rounded={'md'}
-                      cursor={'pointer'}
-                      bg={'blue.700'}
-                      transition={'all 0.3s ease'}
-                      _hover={{
-                        bg: 'blue.800',
-                        boxShadow: 'xl',
-                      }}
-                      width={'100%'}
-                    >
-                      <Box>
-                        <Text
-                          fontWeight={'bold'}
-                          mb={5}>Introduction to Web Development</Text>
-                        <AspectRatio
-                          h={'190px'}
-                          rounded={'md'}
-                          overflow={'hidden'}
-                          width={'500px'}
-                          maxW={{
-                            "lg": "350px",
-                            "md": "350px",
-                            "base": "250px",
-                          }}
-                          ratio={1}>
-                          <iframe
-                            title='naruto'
-                            src='https://www.youtube.com/embed/O_GWbkXIqEY'
-                            allowFullScreen
-                          />
-                        </AspectRatio>
-                      </Box>
-                    </Box>
-                  </WrapItem>
-                ))
-              }
-            </Wrap>
+            {
+              videos.length > 0
+                ? (
+                  <Wrap spacing={5}>
+                    {videos}
+                  </Wrap>
+                )
+                : <Text>No Videos</Text>
+            }
+
           </Box>
 
           <Center
@@ -129,6 +129,7 @@ export default function Page() {
               fontSize={'md'}
               px={12}
               py={8}
+              onClick={toggleQuiz}
             >
               Complete Lesson
             </Button>
@@ -141,7 +142,7 @@ export default function Page() {
       {/* Quiz */}
 
       <Box
-        display={isOpen ? 'block' : 'none'}
+        display={quizOpen ? 'block' : 'none'}
       >
 
         <Heading size={"md"}>Lesson Quiz</Heading>
@@ -155,7 +156,7 @@ export default function Page() {
           </Text>
 
           <OrderedList
-          spacing={10}
+            spacing={10}
             my={10}>
 
             <ListItem>
@@ -213,8 +214,9 @@ export default function Page() {
           <Button
             colorScheme={'green'}
             borderRadius={'full'}
+            onClick={toggleQuiz}
           >
-            Complete Lesson
+            Submiz Quiz
           </Button>
 
         </Box>
@@ -231,4 +233,35 @@ Page.getLayout = function getLayout(page: ReactElement) {
       {page}
     </LearnLayout>
   )
+}
+
+export const getServerSideProps: GetServerSideProps<{
+  data: SyllabiTopicResponse
+}> = async ({ params, req }) => {
+
+  if (!params) {
+    return {
+      notFound: true,
+    }
+  }
+
+  const { topic } = params;
+  api.getAccessToken = () => getAccessTokenServerSide(req)
+  const response = await api.get_syllabi_progress(topic as string);
+  if (!response.success) {
+    return {
+      notFound: true,
+    }
+  }
+
+  const data = response.result.data;
+  if (!data) {
+    throw new Error("Invalid response");
+  }
+
+  return {
+    props: {
+      data
+    },
+  }
 }

@@ -1,4 +1,6 @@
-import { HOME_URL } from '@/router/routes';
+import { AlertType, addMessage } from '@/common/alerts';
+import { ERROR_CODES, VERIFY_EMAIL_KEY } from '@/common/constants';
+import { HOME_URL, VERIFY_ACCOUNT_URL } from '@/router/routes';
 import { api } from '@/services/api';
 import { authenticate } from '@/services/authenticate';
 import { ViewIcon, ViewOffIcon } from '@chakra-ui/icons';
@@ -20,8 +22,10 @@ import {
   FormErrorMessage,
 } from '@chakra-ui/react';
 import { useFormik } from 'formik';
+import Cookies from 'js-cookie';
 import { useState } from 'react'
 import * as Yup from 'yup';
+import NextLink from 'next/link';
 
 export default function Page() {
   const [showPassword, setShowPassword] = useState(false);
@@ -46,6 +50,18 @@ export default function Page() {
           window.location.href = HOME_URL
         }
         throw new Error('Invalid response')
+      }
+
+      if (response.result.data) {
+        const code = response.result.data.euid as any as string
+        if (code == ERROR_CODES.email_not_verified) {
+          addMessage(AlertType.Success, `
+          Verify your email first!
+          Please check your email for otp to verify your account.
+          `)
+          Cookies.set(VERIFY_EMAIL_KEY, values.email)
+          window.location.href = VERIFY_ACCOUNT_URL
+        }
       }
 
       const fields = ['email', 'password']
@@ -128,7 +144,7 @@ export default function Page() {
                     onChange={formik.handleChange}
                     isChecked={formik.values.rememberMe}
                   >Remember me</Checkbox>
-                  <Link color={'blue.400'} href='/password/forgot'>Forgot password?</Link>
+                  <Link as={NextLink} color={'blue.400'} href='/password/forgot'>Forgot password?</Link>
                 </Stack>
                 <Button
                   bg={'blue.400'}
@@ -143,7 +159,7 @@ export default function Page() {
 
               <Stack pt={6}>
                 <Text align={'center'}>
-                  Don&apos;t have an account? <Link href='/signup' color={'blue.400'}>Create an account</Link>
+                  Don&apos;t have an account? <Link as={NextLink} href='/signup' color={'blue.400'}>Create an account</Link>
                 </Text>
               </Stack>
             </Stack>

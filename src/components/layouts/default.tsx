@@ -8,7 +8,7 @@ import Alerts from '../alert';
 
 
 export default function DefaultLayout({ children }: { children: ReactNode }) {
-  const bgNav = useColorModeValue('gray.200', 'gray.800');
+  const bgNav = useColorModeValue('gray.200', 'gray.900');
 
   return (
     <>

@@ -36,6 +36,9 @@
       ],
       "@/interfaces/*": [
         "./src/interfaces/*"
+      ],
+      "@/store/*": [
+        "./src/store/*"
       ]
     },
     "forceConsistentCasingInFileNames": true

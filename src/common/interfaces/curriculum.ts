@@ -1,3 +1,4 @@
+import { Resource } from "./resource";
 
 export enum CurriculumDifficulty {
   Beginner = "B",
@@ -32,4 +33,51 @@ export interface CurriculumListResponse {
   enrolled: number;
   difficulty: CurriculumDifficulty;
   rating: number;
+  ratings: number;
+  slug: string;
+}
+
+export interface SyllabiTopic {
+  id: number;
+  order: number;
+  title: string;
+  slug: string;
+  description: string;
+  outlines: string[];
+  syllabi: number;
+}
+
+export interface SyllabiTopicWithResources extends SyllabiTopic {
+  resources: Resource[]
+}
+
+export interface CurriculumSyllabi {
+  id: number;
+  order: number;
+  title: string;
+  slug: string;
+  description: string;
+  curriculum: number;
+  outlines: string[];
+  topics: SyllabiTopic[];
+}
+
+export interface EnrolledCurriculumSyllabi extends CurriculumSyllabi {
+  completed: boolean;
+}
+
+export interface CurriculumPageResponse extends CurriculumListResponse {
+  syllabus: CurriculumSyllabi[];
+}
+
+export interface EnrolledCurriculumPageResponse extends CurriculumListResponse {
+  syllabus: EnrolledCurriculumSyllabi[];
+}
+
+export interface SyllabiTopicResponse {
+  id: number;
+  syllabi: CurriculumSyllabi;
+  topic: SyllabiTopicWithResources;
+  completed: boolean;
+  completed_at: string;
 }

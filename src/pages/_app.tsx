@@ -4,6 +4,7 @@ import { ChakraProvider } from '@chakra-ui/react'
 import DefaultLayout from '@/components/layouts/default'
 import { NextPage } from 'next'
 import { ReactElement, ReactNode } from 'react'
+import { wrapper } from "../store/store";
 
 export type NextPageWithLayout<P = {}, IP = P> = NextPage<P, IP> & {
   getLayout?: (page: ReactElement) => ReactNode
@@ -14,7 +15,7 @@ type AppPropsWithLayout = AppProps & {
 }
 
 
-export default function App({ Component, pageProps }: AppPropsWithLayout) {
+function App({ Component, pageProps }: AppPropsWithLayout) {
   const getLayout = Component.getLayout ?? ((page) => page)
 
   return (
@@ -27,3 +28,5 @@ export default function App({ Component, pageProps }: AppPropsWithLayout) {
     </ChakraProvider>
   )
 }
+
+export default wrapper.withRedux(App);

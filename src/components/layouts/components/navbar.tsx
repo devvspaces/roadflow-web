@@ -4,7 +4,6 @@ import {
   Flex,
   Avatar,
   HStack,
-  Link,
   IconButton,
   Button,
   Menu,
@@ -17,13 +16,14 @@ import {
   Stack,
   Heading,
   useColorMode,
+  Link
 } from '@chakra-ui/react';
 import { HamburgerIcon, CloseIcon } from '@chakra-ui/icons';
 import { MoonIcon, SunIcon } from '@chakra-ui/icons';
 import { useCurrentUser } from '@/common/hooks/useCurrentUser';
 import { useLogout } from '@/common/hooks/useLogout';
 import { AlertType, addMessage } from '@/common/alerts';
-
+import NextLink from 'next/link';
 
 export interface NavLinkItem {
   name: string;
@@ -32,15 +32,17 @@ export interface NavLinkItem {
 
 const NavLink = ({ children, href }: { children: ReactNode, href?: string }) => (
   <Link
+    as={NextLink}
     px={2}
     py={1.5}
     rounded={'md'}
     color={useColorModeValue('gray.700', 'gray.200')}
     _hover={{
       textDecoration: 'none',
-      bg: useColorModeValue('gray.200', 'gray.700'),
+      bg: useColorModeValue('gray.300', 'gray.700'),
     }}
-    href={href || '#'}>
+    href={href}
+    >
     {children}
   </Link>
 );
@@ -79,7 +81,7 @@ export default function Navbar() {
         />
         <HStack spacing={8} alignItems={'center'}>
           <Box>
-            <Link href={'/'} style={{ textDecoration: "None" }}>
+            <Link as={NextLink} href={'/'} style={{ textDecoration: "None" }}>
               <Heading size={"lg"}>RoadFlow</Heading>
             </Link>
           </Box>
@@ -106,7 +108,7 @@ export default function Navbar() {
               !user && (
                 <>
                   <Button
-                    as={'a'}
+                    as={NextLink}
                     fontSize={'sm'}
                     fontWeight={400}
                     variant={'link'}
@@ -114,7 +116,7 @@ export default function Navbar() {
                     Sign In
                   </Button>
                   <Button
-                    as={'a'}
+                    as={NextLink}
                     display={{ base: 'none', md: 'inline-flex' }}
                     fontSize={'sm'}
                     fontWeight={600}

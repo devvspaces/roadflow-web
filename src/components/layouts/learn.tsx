@@ -20,19 +20,34 @@ import {
   DrawerHeader,
   DrawerBody,
   DrawerCloseButton,
+  useColorModeValue,
 } from '@chakra-ui/react';
-import Head from 'next/head';
 import { FaGraduationCap, FaProjectDiagram, FaUser, FaYoutube } from 'react-icons/fa';
+import { useSelector } from 'react-redux';
+import { selectHeadState, selectNavState } from '@/store/learnNavSlice';
+import { useRouter } from 'next/router'
 
 
 interface LearnLayoutProps {
   children: React.ReactNode
 }
 
+export interface LearnNav {
+  name: string;
+  link: string;
+  completed: boolean;
+}
+
 export default function LearnLayout({ children }: LearnLayoutProps) {
 
-  // use disclosure
+  const navs = useSelector(selectNavState);
+  const heading = useSelector(selectHeadState);
+
   const { isOpen, onOpen, onClose } = useDisclosure()
+  const navBottomLinkBg = useColorModeValue('gray.500', 'gray.700');
+  const navBottomLinkBgHover = useColorModeValue('gray.700', 'gray.500');
+
+  const router = useRouter()
 
   function getMenu() {
     return (
@@ -40,13 +55,14 @@ export default function LearnLayout({ children }: LearnLayoutProps) {
         <Stack
           spacing={3}>
           {
-            [1, 2, 3, 4, 5, 6, 7, 8, 9].map((item, index) => (
+            navs.map((item, index) => (
               <Box key={index}
                 border={'1px'}
                 display={'flex'}
                 alignItems={'center'}
                 gap={2}
-                p={2}
+                p={3}
+                pl={4}
                 borderColor={'gray.400'}
                 color={'gray.500'}
                 rounded={'md'}
@@ -56,9 +72,12 @@ export default function LearnLayout({ children }: LearnLayoutProps) {
                   bg: 'gray.200',
                   color: 'gray.700',
                 }}
+                onClick={(e) => {
+                  router.push(item.link)
+                }}
               >
-                <CheckCircleIcon />
-                <Text>Week {item}</Text>
+                <CheckCircleIcon color={item.completed ? 'green.500': 'gray.400'} />
+                <Text>{item.name}</Text>
               </Box>
             ))
           }
@@ -78,10 +97,10 @@ export default function LearnLayout({ children }: LearnLayoutProps) {
                 title: 'Classmates',
                 icon: <FaUser />
               },
-              {
-                title: 'Projects',
-                icon: <FaProjectDiagram />
-              },
+              // {
+              //   title: 'Projects',
+              //   icon: <FaProjectDiagram />
+              // },
               {
                 title: 'External Courses',
                 icon: <FaYoutube />
@@ -91,15 +110,16 @@ export default function LearnLayout({ children }: LearnLayoutProps) {
                 display={'flex'}
                 alignItems={'center'}
                 gap={2}
-                p={2}
+                p={3}
+                pl={4}
                 color={'gray.200'}
                 rounded={'md'}
                 cursor={'pointer'}
-                bg={'purple.700'}
+                bg={navBottomLinkBg}
                 transition={'all 0.3s ease'}
                 boxShadow={'md'}
                 _hover={{
-                  bg: 'purple.800',
+                  bg: navBottomLinkBgHover,
                 }}
               >
                 {item.icon}
@@ -120,7 +140,7 @@ export default function LearnLayout({ children }: LearnLayoutProps) {
         <DrawerOverlay />
         <DrawerContent>
           <DrawerCloseButton />
-          <DrawerHeader borderBottomWidth='1px'>Introduction to Web Development</DrawerHeader>
+          <DrawerHeader borderBottomWidth='1px'>{heading}</DrawerHeader>
           <DrawerBody>
             {menu}
           </DrawerBody>
@@ -135,12 +155,12 @@ export default function LearnLayout({ children }: LearnLayoutProps) {
           {/* Outlines box */}
           <Box
             width={"25%"}
-            bg={'gray.100'}
+            bg={useColorModeValue('gray.100', 'gray.900')}
             p={5}
             display={{ "lg": "block", "md": "block", "base": "none" }}
-            id='learnMenu'
+            id='learnMenu'  
             borderRadius={10}>
-            <Heading size={"md"} mb={7}>Introduction to Web Development</Heading>
+            <Heading size={"md"} mb={7}>{heading}</Heading>
             {menu}
           </Box>
           <Box

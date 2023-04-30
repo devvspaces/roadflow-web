@@ -30,14 +30,11 @@ export async function middleware(request: NextRequest) {
 
   let jwt_payload_decoded: JwtPayload;
 
-
   try {
     jwt_payload_decoded = JSON.parse(jwt_payload);
   } catch (e) {
     return clearAndRedirect()
   }
-
-  console.log(jwt_payload_decoded)
 
   if (jwt_payload_decoded.access_expires_at < Date.now()) {
     return clearAndRedirect()

@@ -18,8 +18,7 @@ export default function SearchCurriculum() {
     if (response.success) {
       const items = response.result.data?.results || [];
       const pItems = items.map((item) => ({
-        name: item.name,
-        description: item.description,
+        ...item,
         level: getDifficulty(item.difficulty),
         duration: item.weeks,
         rating: item.rating

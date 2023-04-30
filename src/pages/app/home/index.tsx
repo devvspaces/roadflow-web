@@ -47,7 +47,7 @@ export default function Roles() {
       </Head>
 
       <Box width={"100%"}>
-        <Container maxW={'1300px'}>
+        <Container maxW={'1300px'} pt={10}>
           <Stack mb={10}>
             <Heading
               fontSize={'x-large'}
