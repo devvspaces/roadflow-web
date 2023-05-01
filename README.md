@@ -1,6 +1,20 @@
-This is a [Next.js](https://nextjs.org/) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
+# Roadflow Frontend
+
+This is the frontend for Roadflow website, it curates curriculums and syllabus for tech roles and tools for new developers or experts to use. It allows progress tracking, curriculum reviews using MindsDB, and quizzes to verify that students understand the concept taught. Roadflow does not create new video or article resources but leverages on free contents on the internet. Sources for resources includes but not limited to Youtube, Hashnode, Medium, Coursera, and Udemy etc.
 
 ## Getting Started
+
+You need to run the api first, as the frontend heavily depends on the api that provides more technical features like Signup, Login and more.
+
+### Running the API
+
+Visit [Roadflow API repository](https://github.com/devvspaces/roadflow-api) to set up the API.
+
+### Setup
+
+Make sure you update the `.env.development` file to use the BASE URL of the API server.
+
+### Usage
 
 First, run the development server:
 
@@ -14,14 +28,6 @@ pnpm dev
 
 Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
-You can start editing the page by modifying `pages/index.tsx`. The page auto-updates as you edit the file.
-
-[API routes](https://nextjs.org/docs/api-routes/introduction) can be accessed on [http://localhost:3000/api/hello](http://localhost:3000/api/hello). This endpoint can be edited in `pages/api/hello.ts`.
-
-The `pages/api` directory is mapped to `/api/*`. Files in this directory are treated as [API routes](https://nextjs.org/docs/api-routes/introduction) instead of React pages.
-
-This project uses [`next/font`](https://nextjs.org/docs/basic-features/font-optimization) to automatically optimize and load Inter, a custom Google Font.
-
 ## Learn More
 
 To learn more about Next.js, take a look at the following resources:
@@ -30,6 +36,14 @@ To learn more about Next.js, take a look at the following resources:
 - [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
 
 You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js/) - your feedback and contributions are welcome!
+
+## ⛏️ Built Using
+
+- [NextJs](https://nextjs.org/docs) - React Framework
+- [Roadflow API](https://github.com/devvspaces/roadflow-api) - Roadflow REST API
+- [Chakra](https://chakra-ui.com/) - Frontend Design Library
+- [Formik](https://formik.org/) - Building forms and validation
+
 
 ## Deploy on Vercel
 
