@@ -45,8 +45,8 @@ export type RequestOption = {
  * 
  */
 export class BaseApiClient {
-  private _baseUrl: string;
-  private _baseHeaders: DynamicObject;
+  private _baseUrl = "null";
+  private _baseHeaders: DynamicObject = {};
 
   constructor(baseUrl: string, baseHeaders: DynamicObject) {
     this.setBaseUrl(baseUrl);
@@ -116,10 +116,11 @@ export class BaseApiClient {
 
     if (context.params) {
       Object.keys(context.params).forEach(key => {
-        url = url.replace(`{${key}}`, context.params[key]);
+        if (context.params)
+          url = url.replace(`{${key}}`, context.params[key]);
       });
     }
-    
+
     // If does not end with a slash, add a slash
     if (!url.endsWith('/')) {
       url = `${url}/`;
@@ -128,7 +129,8 @@ export class BaseApiClient {
     if (context.query) {
       const qUrl = new URL(url);
       Object.keys(context.query).forEach(key => {
-        qUrl.searchParams.append(key, context.query[key]);
+        if (context.query)
+          qUrl.searchParams.append(key, context.query[key]);
       });
       url = qUrl.toString();
     }
