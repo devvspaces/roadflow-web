@@ -2,6 +2,7 @@ import { createSlice } from "@reduxjs/toolkit";
 import { HYDRATE } from "next-redux-wrapper";
 import { AppState } from "./store";
 import { LearnNav } from "@/components/layouts/learn";
+import build from "next/dist/build";
 
 // Type for our state
 export interface LearnNavState {
@@ -28,17 +29,20 @@ export const learnNavSlice = createSlice({
     setHeadState(state, action) {
       state.headState = action.payload;
     },
+
+    
   },
 
   // Special reducer for hydrating the state. Special case for next-redux-wrapper
-  extraReducers: {
-    [HYDRATE]: (state, action) => {
+  extraReducers: (builder) => {
+    builder.addCase(HYDRATE, (state, action) => {
       return {
         ...state,
         ...action.payload.nav,
       };
-    },
+    });
   },
+  
 });
 
 export const { setNavState, setHeadState } = learnNavSlice.actions;

@@ -1,0 +1,36 @@
+Give me a curriculum for Learning cryptocurrency trading and investment in this format
+{
+  "curriculum_name": here,
+  "description": here,
+  "objective": here,
+  "prerequisites": here,
+  "syllabus": [
+    {
+      "topic": here,
+      "description": here,
+      "subtopics": [
+        {
+          "subtopic": here,
+          "description": here,
+        }
+      ]
+    }
+  ]
+}
+
+
+Give me 4 quiz questions for TOPIC - NAME in this format
+{
+  "questions": [
+    {
+      "question": here,
+      "options": [
+        {
+          "option": here,
+          "is_correct": here,
+          "reason": here
+        }
+      ]
+    }
+  ]
+}
