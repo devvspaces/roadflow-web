@@ -28,6 +28,7 @@ export const authSlice = createSlice({
     builder.addCase(HYDRATE, (state, action) => {
       return {
         ...state,
+        // @ts-ignore: Unreachable code error
         ...action.payload.nav,
       };
     });
