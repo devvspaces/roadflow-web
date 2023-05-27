@@ -2,7 +2,8 @@ import { joinUrls } from "@/common";
 import { DynamicObject } from "@/common/interfaces";
 import { ErrorResponse } from "@/common/interfaces/error";
 import { SuccessResponse } from "@/common/interfaces/response";
-import axios, { AxiosResponse, AxiosError } from "axios";
+import { BaseHttpHandler, HttpHandlerError, _Response } from "./http_handlers/httpHandler";
+import { AxiosHandler } from "./http_handlers/axiosHandler";
 
 
 export type RequestOption = {
@@ -47,10 +48,12 @@ export type RequestOption = {
 export class BaseApiClient {
   private _baseUrl = "null";
   private _baseHeaders: DynamicObject = {};
+  private _http: BaseHttpHandler;
 
   constructor(baseUrl: string, baseHeaders: DynamicObject) {
     this.setBaseUrl(baseUrl);
     this.setBaseHeaders(baseHeaders);
+    this._http = new AxiosHandler();
   }
 
   /**
@@ -59,6 +62,10 @@ export class BaseApiClient {
    */
   public getBaseUrl() {
     return this._baseUrl;
+  }
+
+  setHttpHandler(handler: BaseHttpHandler) {
+    this._http = handler;
   }
 
   /**
@@ -145,13 +152,14 @@ export class BaseApiClient {
    */
   public async buildHeaders(context: Pick<RequestOption, 'headers' | 'path'>) {
     return {
+      'Content-Type': 'application/json',
       ...this.getBaseHeaders(),
       ...context.headers
     }
   }
 
   public async resolveResult<T>(
-    response: AxiosResponse<any>,
+    response: _Response<T | unknown | any > | undefined,
   ): Promise<{
     result: SuccessResponse<T>;
     status: number;
@@ -161,6 +169,11 @@ export class BaseApiClient {
     status: number;
     success: false;
   }> {
+    
+    if (!response) {
+      throw new Error("No response from server")
+    }
+
     if (response.status >= 200 && response.status < 300) {
       return {
         result: response.data as SuccessResponse<T>,
@@ -175,11 +188,15 @@ export class BaseApiClient {
     }
   }
 
-  public handleAxiosError(context: RequestOption, url: string) {
-    return (error: AxiosError) => {
+  public errorCallback<T = unknown>(context: RequestOption, url: string) {
+    // Redirect to login if 401
+    return (error: HttpHandlerError<T>) => {
+      if (typeof window !== 'undefined' && error.response?.status === 401) {
+        window.location.href = '/login';
+      }
       console.log("Error on request", error)
       this.logInput(context, url);
-      return error.response as AxiosResponse<ErrorResponse>
+      return error.response
     }
   }
 
@@ -199,42 +216,25 @@ export class BaseApiClient {
     const url = this.buildUrl(path, context);
     const headers = await this.buildHeaders(context)
 
-    const response = await axios.get(url, {
-      headers: {
-        'Content-Type': 'application/json',
-        ...headers
-      }
+    const response = await this._http.get<T>(url, {
+      headers,
     }).then((data) => {
       return data
-    }).catch(this.handleAxiosError(context, url));
-
-    if (!response) {
-      throw new Error("API not responding correctly")
-    }
+    }).catch(this.errorCallback<T>(context, url));
 
     return this.resolveResult<T>(response);
   }
 
   public async post<T>(path: string, context: RequestOption) {
     this.addPath(path, context)
-
     const url = this.buildUrl(path, context);
     const headers = await this.buildHeaders(context)
-
-    this.logInput(context, url, headers);
-
-    const response = await axios.post(url, context.body, {
-      headers: {
-        'Content-Type': 'application/json',
-        ...headers
-      },
+    const response = await this._http.post(url, {
+      headers,
+      body: context.body
     }).then((data) => {
       return data
-    }).catch(this.handleAxiosError(context, url));
-
-    if (!response) {
-      throw new Error("API not responding correctly")
-    }
+    }).catch(this.errorCallback(context, url));
     return this.resolveResult<T>(response);
   }
 
@@ -243,19 +243,12 @@ export class BaseApiClient {
     this.addPath(path, context)
     const url = this.buildUrl(path, context);
     const headers = await this.buildHeaders(context)
-    const response = await axios.put(url, context.body, {
-      headers: {
-        'Content-Type': 'application/json',
-        ...headers
-      },
+    const response = await this._http.put(url, {
+      headers,
+      body: context.body,
     }).then((data) => {
       return data
-    }).catch(this.handleAxiosError(context, url));
-
-    if (!response) {
-      throw new Error("API not responding correctly")
-    }
-
+    }).catch(this.errorCallback(context, url));
     return this.resolveResult<T>(response);
   }
 
@@ -263,19 +256,14 @@ export class BaseApiClient {
     this.addPath(path, context)
     const url = this.buildUrl(path, context);
     const headers = await this.buildHeaders(context)
-    const response = await axios.delete(url, {
-      headers: {
-        'Content-Type': 'application/json',
-        ...headers
-      }
+    const response = await this._http.delete(url, {
+      headers,
     }).then((data) => {
       return data
-    }).catch(this.handleAxiosError(context, url));
-
+    }).catch(this.errorCallback(context, url));
     if (!response) {
       throw new Error("API not responding correctly")
     }
-
     return this.resolveResult<T>(response);
   }
 
@@ -283,18 +271,12 @@ export class BaseApiClient {
     this.addPath(path, context)
     const url = this.buildUrl(path, context);
     const headers = await this.buildHeaders(context)
-    const response = await axios.patch(url, context.body, {
-      headers: {
-        'Content-Type': 'application/json',
-        ...headers
-      },
+    const response = await this._http.patch(url, {
+      headers,
+      body: context.body,
     }).then((data) => {
       return data
-    }).catch(this.handleAxiosError(context, url));
-
-    if (!response) {
-      throw new Error("API not responding correctly")
-    }
+    }).catch(this.errorCallback(context, url));
     return this.resolveResult<T>(response);
   }
 
@@ -305,19 +287,16 @@ export class BaseApiClient {
     formData.append('file', file);
     const headers = await this.buildHeaders(context)
 
-    const response = await axios.post<T>(url, formData, {
-      headers: {
-        'Content-Type': 'multipart/form-data',
-        ...headers
-      },
+    const response = await this._http.post(url, {
+      headers,
+      body: formData,
     }).then((data) => {
       return data
-    }).catch(this.handleAxiosError(context, url));
+    }).catch(this.errorCallback(context, url));
 
     if (!response) {
       throw new Error("API not responding correctly")
     }
-
     return this.resolveResult<T>(response);
   }
 }

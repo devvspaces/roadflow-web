@@ -11,10 +11,11 @@ import { getAccessToken } from "./authenticate";
 import { QuizSubmitResponse, TopicQuiz } from "@/common/interfaces/quiz";
 import { DynamicObject } from "@/common/interfaces";
 import { Grades } from "@/common/interfaces/grades";
+import { EventResponse } from "@/common/interfaces/events";
 
 
 export class ApiService extends BaseApiClient {
-  getAccessToken: CallableFunction = getAccessToken;
+  getAccessToken: typeof getAccessToken = getAccessToken;
 
   constructor() {
     if (BASE_URL === undefined) {
@@ -48,14 +49,14 @@ export class ApiService extends BaseApiClient {
   }
 
   authorize(data: RequestOption) {
-    const access = this.getAccessToken();
-    if (access == undefined) {
+    const tokens = this.getAccessToken();
+    if (tokens == undefined) {
       throw new Error("Unauthorized");
     }
     return {
       ...data,
       headers: {
-        "Authorization": `Bearer ${access}`
+        "Authorization": `Bearer ${tokens.access}`
       }
     }
   }
@@ -175,6 +176,11 @@ export class ApiService extends BaseApiClient {
           review: body.review
         }
       }));
+  }
+
+  async get_upcoming_events() {
+    return this.get<PaginatedResponse<EventResponse>>(
+      "/curriculum/upcoming-events/");
   }
 }
 

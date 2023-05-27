@@ -9,7 +9,7 @@ import Head from 'next/head';
 import LearnLayout from '@/components/layouts/learn';
 import { GetServerSideProps, InferGetServerSidePropsType } from 'next';
 import { EnrolledCurriculumPageResponse } from '@/common/interfaces/curriculum';
-import { getAccessTokenServerSide } from '@/services/authenticate';
+import { checkServerSideResponse, getAccessTokenServerSide } from '@/services/authenticate';
 import { api } from '@/services/api';
 import { SyllabiWeek } from '@/components/week';
 import { useDispatch } from 'react-redux';
@@ -109,10 +109,9 @@ export const getServerSideProps: GetServerSideProps<{
   const { slug } = params;
   api.getAccessToken = () => getAccessTokenServerSide(req)
   const response = await api.get_single_enrolled_curriculum(slug as string);
-  if (!response.success) {
-    return {
-      notFound: true,
-    }
+  const check = checkServerSideResponse(response, req)
+  if (check) {
+    return check
   }
 
   const data = response.result.data;

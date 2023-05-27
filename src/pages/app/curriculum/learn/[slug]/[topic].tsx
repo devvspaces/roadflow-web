@@ -17,11 +17,13 @@ import {
   Skeleton,
   HStack,
   useColorModeValue,
+  Card,
+  CardBody,
 } from '@chakra-ui/react';
 import Head from 'next/head';
 import LearnLayout from '@/components/layouts/learn';
 import { api } from '@/services/api';
-import { getAccessTokenServerSide } from '@/services/authenticate';
+import { checkServerSideResponse, getAccessTokenServerSide } from '@/services/authenticate';
 import { GetServerSideProps, InferGetServerSidePropsType } from 'next';
 import { SyllabiTopicResponse } from '@/common/interfaces/curriculum';
 import { useDispatch } from 'react-redux';
@@ -32,16 +34,27 @@ import { TopicQuiz } from '@/common/interfaces/quiz';
 import { Formik, Form, Field } from 'formik';
 import { DynamicObject } from '@/common/interfaces';
 import { useRouter } from 'next/router';
+import NProgress from 'nprogress'
+import CountdownTimer from '@/components/countdown';
 
 export default function Page({ data }: InferGetServerSidePropsType<typeof getServerSideProps>) {
 
   const dispatch = useDispatch()
   const reasonCM = useColorModeValue('red.200', 'red.700')
+  const quizAlertBg = useColorModeValue('gray.100', 'gray.700')
+
+  const [quizOpen, openQuiz] = useState(false)
+  const [quiz, setQuiz] = useState<TopicQuiz>()
+  const [quizMark, setQuizMark] = useState<number>()
+  const [remainingTime, setRemainingTime] = useState<number>(0)
 
   const router = useRouter()
   const { slug } = router.query
 
   useEffect(() => {
+    setQuiz(undefined)
+    openQuiz(false)
+    setQuizMark(undefined)
     dispatch(setNavState(data.syllabi.topics.map((item) => {
       return {
         name: item.title,
@@ -51,11 +64,8 @@ export default function Page({ data }: InferGetServerSidePropsType<typeof getSer
     })));
 
     dispatch(setHeadState(data.syllabi.title));
-  }, [dispatch, data, slug])
 
-  const [quizOpen, openQuiz] = useState(false)
-  const [quiz, setQuiz] = useState<TopicQuiz>()
-  const [quizMark, setQuizMark] = useState<number>()
+  }, [dispatch, data, slug, router, setQuiz])
 
   const toggleQuiz = async () => {
     openQuiz(!quizOpen);
@@ -68,7 +78,14 @@ export default function Page({ data }: InferGetServerSidePropsType<typeof getSer
     const response = await api.get_topic_quiz(data.topic.slug)
     if (response.success) {
       if (response.result.data) {
-        setQuiz(response.result.data)
+        if (response.result.data.quiz.length != 0) {
+          setQuiz(response.result.data)
+
+          setQuizMark(response.result.data.mark)
+          if (response.result.data.remaining_time != 0) {
+            setRemainingTime(response.result.data.remaining_time)
+          }
+        }
         return
       }
     }
@@ -200,16 +217,51 @@ export default function Page({ data }: InferGetServerSidePropsType<typeof getSer
 
           {
             quizMark != undefined && (
-              <Text
-                fontWeight={600}
-                fontSize={'lg'}
-                mt={5}
-              >Result: {quizMark}%</Text>
+              <Card
+                bg={quizAlertBg}
+                mt={5}>
+                <CardBody>
+                  <Heading size={'sm'} mb={3}>Grade</Heading>
+                  <Text>{quizMark}%</Text>
+
+                  <Heading size={'sm'} mb={3} mt={5}>Retake In</Heading>
+                  <Text>
+                    {
+                      remainingTime == 0 ? "You can retake the quiz now." : (
+                        <CountdownTimer setTime={setRemainingTime} targetDate={Date.now() + (remainingTime * 1000)} />
+                      )
+                    }
+
+                  </Text>
+                </CardBody>
+              </Card>
             )
           }
 
+          <Box>
+            {
+              quiz !== undefined && quiz.quiz.length == 0 && (
+                <Card
+                  bg={quizAlertBg}
+                  mt={5}>
+                  <CardBody>
+                    <Heading size={'md'} mb={3}>
+                      No Quiz
+                    </Heading>
+
+                    <Text>
+                      No Quiz for this lesson. You can go to next lesson.
+                    </Text>
+                  </CardBody>
+                </Card>
+              )
+            }
+          </Box>
+
+
+
           {
-            quiz
+            quiz !== undefined && quiz.quiz.length != 0
               ? (
                 <Formik
                   initialValues={getFormikIntial(quiz)}
@@ -226,7 +278,10 @@ export default function Page({ data }: InferGetServerSidePropsType<typeof getSer
 
                     if (!valid) return;
 
+                    NProgress.set(0.3)
                     const response = await api.submit_topic_quiz(data.topic.slug, values);
+                    NProgress.done()
+
                     if (response.success) {
                       const data = response.result.data
                       if (data) {
@@ -238,6 +293,7 @@ export default function Page({ data }: InferGetServerSidePropsType<typeof getSer
                           }
                         })
                         setQuizMark(data.mark)
+                        setRemainingTime(data.remaining_time)
                       }
                     }
                   }}
@@ -301,13 +357,16 @@ export default function Page({ data }: InferGetServerSidePropsType<typeof getSer
 
                       </OrderedList>
 
-                      <Button
-                        colorScheme={'green'}
-                        size={'lg'}
-                        type='submit'
-                      >
-                        Submiz Quiz
-                      </Button>
+                      {remainingTime == 0 && (
+                        <Button
+                          colorScheme={'green'}
+                          size={'lg'}
+                          type='submit'
+                        >
+                          Submiz Quiz
+                        </Button>
+                      )}
+
                     </Form>
                   )}
 
@@ -353,10 +412,9 @@ export const getServerSideProps: GetServerSideProps<{
   const { topic } = params;
   api.getAccessToken = () => getAccessTokenServerSide(req)
   const response = await api.get_syllabi_progress(topic as string);
-  if (!response.success) {
-    return {
-      notFound: true,
-    }
+  const check = checkServerSideResponse(response, req)
+  if (check) {
+    return check
   }
 
   const data = response.result.data;

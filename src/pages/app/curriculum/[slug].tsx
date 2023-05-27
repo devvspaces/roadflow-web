@@ -2,12 +2,12 @@ import Head from 'next/head'
 import { Accordion, Badge, Box, Button, Container, HStack, Heading, Text } from '@chakra-ui/react';
 import { StarIcon } from '@chakra-ui/icons';
 import React, { } from 'react';
-import { CurriculumPageResponse, getDifficulty } from '@/common/interfaces/curriculum';
+import { CurriculumDifficulty, CurriculumPageResponse, getDifficulty } from '@/common/interfaces/curriculum';
 import { api } from '@/services/api';
 import { ratingPercent } from '@/common';
 import { SyllabiWeek } from '@/components/week';
 import { GetServerSideProps, InferGetServerSidePropsType } from 'next';
-import { getAccessTokenServerSide } from '@/services/authenticate';
+import { checkServerSideResponse, getAccessTokenServerSide } from '@/services/authenticate';
 import NextLink from 'next/link';
 import { useRouter } from 'next/router';
 
@@ -210,10 +210,9 @@ export const getServerSideProps: GetServerSideProps<{
   const { slug } = params;
   api.getAccessToken = () => getAccessTokenServerSide(req)
   const response = await api.get_single_curriculum(slug as string);
-  if (!response.success) {
-    return {
-      notFound: true,
-    }
+  const check = checkServerSideResponse(response, req)
+  if (check) {
+    return check
   }
 
   const data = response.result.data;
@@ -223,7 +222,7 @@ export const getServerSideProps: GetServerSideProps<{
 
   const curriculum = {
     ...data,
-    level: getDifficulty(data.difficulty),
+    level: getDifficulty(data.difficulty as CurriculumDifficulty),
     is_enrolled: await api.check_enrolled_in_curriculum(slug as string)
   }
 

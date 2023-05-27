@@ -14,6 +14,9 @@ export interface Quiz {
 
 export interface TopicQuiz {
   quiz: Quiz[];
+  mark: number;
+  remaining_time: number;  // in seconds
+  completed: boolean;
 }
 
 
@@ -26,4 +29,5 @@ export interface QuizSubmitResponse {
     }
   }[];
   mark: number;
+  remaining_time: number;  // in seconds
 }

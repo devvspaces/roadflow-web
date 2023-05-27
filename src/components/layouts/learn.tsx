@@ -45,8 +45,8 @@ export default function LearnLayout({ children }: LearnLayoutProps) {
   const heading = useSelector(selectHeadState);
 
   const { isOpen, onOpen, onClose } = useDisclosure()
-  const navBottomLinkBg = useColorModeValue('gray.500', 'gray.700');
-  const navBottomLinkBgHover = useColorModeValue('gray.700', 'gray.500');
+  const navBottomLinkBg = useColorModeValue('gray.500', 'gray.900');
+  const navBottomLinkBgHover = useColorModeValue('gray.700', 'gray.800');
 
   const router = useRouter()
   const { slug } = router.query
@@ -192,18 +192,15 @@ export default function LearnLayout({ children }: LearnLayoutProps) {
 
               <Button
                 display={{ "lg": "none", "md": "none", "base": "block" }}
-                bg={'purple.100'}
+                bg={useColorModeValue('gray.200', 'gray.700')}
                 p={2}
                 borderRadius={10}
                 cursor={'pointer'}
                 transition={'all 0.3s ease'}
-                _hover={{
-                  bg: 'purple.200',
-                }}
                 onClick={onOpen}
                 fontSize={'sm'}
               >
-                <ChevronRightIcon />
+                <ChevronRightIcon mr={1} />
                 Menu
               </Button>
             </Flex>

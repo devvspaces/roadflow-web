@@ -1,4 +1,4 @@
-import { ReactNode } from 'react';
+import { ReactNode, useEffect, useState } from 'react';
 import {
   Box,
   Flex,
@@ -42,13 +42,15 @@ const NavLink = ({ children, href }: { children: ReactNode, href?: string }) => 
       bg: useColorModeValue('gray.300', 'gray.700'),
     }}
     href={href}
-    >
+  >
     {children}
   </Link>
 );
 
+
+
 export default function Navbar() {
-  const { isOpen, onOpen, onClose } = useDisclosure();
+  const [menuOpen, setMenuOpen] = useState(false);
   const { toggleColorMode } = useColorMode();
   const bgColor = useColorModeValue('dark', 'light');
   const links: NavLinkItem[] = [
@@ -61,12 +63,16 @@ export default function Navbar() {
       href: '/app/curriculum/search',
     },
     {
-      name: 'Roadmaps',
-      href: '/app/roles',
+      name: 'Events',
+      href: '/app/events',
     },
   ]
   const user = useCurrentUser()
   const { logout } = useLogout()
+
+  useEffect(() => {
+    setMenuOpen(false)
+  }, [setMenuOpen])
 
   return (
 
@@ -74,10 +80,12 @@ export default function Navbar() {
       <Flex h={20} alignItems={'center'} justifyContent={'space-between'} maxWidth={"1300px"} mx={"auto"}>
         <IconButton
           size={'md'}
-          icon={isOpen ? <CloseIcon /> : <HamburgerIcon />}
+          icon={menuOpen ? <CloseIcon /> : <HamburgerIcon />}
           aria-label={'Open Menu'}
           display={{ md: 'none' }}
-          onClick={isOpen ? onClose : onOpen}
+          onClick={() => {
+            setMenuOpen(!menuOpen)
+          }}
         />
         <HStack spacing={8} alignItems={'center'}>
           <Box>
@@ -171,7 +179,7 @@ export default function Navbar() {
         </Flex>
       </Flex>
 
-      {isOpen ? (
+      {menuOpen ? (
         <Box pb={4} display={{ md: 'none' }}>
           <Stack as={'nav'} spacing={4}>
             {links.map((link, index) => (

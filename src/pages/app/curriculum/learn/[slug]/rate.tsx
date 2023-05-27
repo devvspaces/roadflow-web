@@ -26,7 +26,7 @@ import {
 import Head from 'next/head';
 import LearnLayout from '@/components/layouts/learn';
 import { FaExternalLinkAlt } from 'react-icons/fa';
-import { getAccessTokenServerSide } from '@/services/authenticate';
+import { checkServerSideResponse, getAccessTokenServerSide } from '@/services/authenticate';
 import { GetServerSideProps, InferGetServerSidePropsType } from 'next';
 import { CurriculumWithResources } from '@/common/interfaces/curriculum';
 import { getResource } from '@/common/interfaces/resource';
@@ -184,10 +184,9 @@ export const getServerSideProps: GetServerSideProps<{
   const { slug } = params;
   api.getAccessToken = () => getAccessTokenServerSide(req)
   const response = await api.get_curriculum_with_resources(slug as string);
-  if (!response.success) {
-    return {
-      notFound: true,
-    }
+  const check = checkServerSideResponse(response, req)
+  if (check) {
+    return check
   }
 
   const data = response.result.data;

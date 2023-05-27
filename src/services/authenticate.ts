@@ -6,13 +6,19 @@ import { IncomingMessage } from "http";
 import { NextApiRequestCookies } from "next/dist/server/api-utils";
 
 export const authenticate = (data: LoginResponse) => {
-  Cookies.set(PAYLOAD_KEY, JSON.stringify({
-    ...data.tokens,
-    access_expires_at: Date.now() + data.tokens.access_expires_at * 1000,
-    refresh_expires_at: Date.now() + data.tokens.refresh_expires_at * 1000
-  }));
+  Cookies.set(PAYLOAD_KEY, JSON.stringify(
+    processJWTPayload(data.tokens)
+  ));
   Cookies.set(USER_KEY, JSON.stringify(data.user));
   return data.user;
+}
+
+export const processJWTPayload = (payload: JwtPayload) => {
+  return {
+    ...payload,
+    access_expires_at: Date.now() + payload.access_expires_at * 1000,
+    refresh_expires_at: Date.now() + payload.refresh_expires_at * 1000
+  }
 }
 
 export const getAccessToken = () => {
@@ -31,16 +37,18 @@ export const getAccessToken = () => {
   try {
     jwt_payload_decoded = JSON.parse(jwt_payload);
   } catch (e) {
-    clear()
-    return
+    return clear()
   }
 
-  if (jwt_payload_decoded.access_expires_at < Date.now()) {
-    clear()
-    return
-  }
-
-  return jwt_payload_decoded.access;
+  // TODO: Add this process for updating coeekie in the getServerSide Props too
+  return {
+    ...jwt_payload_decoded,
+    updatePayload: (payload: JwtPayload) => {
+      Cookies.set(PAYLOAD_KEY, JSON.stringify(
+        processJWTPayload(payload)
+      ));
+    }
+  };
 }
 
 export const getAccessTokenServerSide = (req: IncomingMessage & {
@@ -58,10 +66,30 @@ export const getAccessTokenServerSide = (req: IncomingMessage & {
   } catch (e) {
     return
   }
-
-  if (jwt_payload_decoded.access_expires_at < Date.now()) {
-    return
+  return {
+    ...jwt_payload_decoded,
+    updatePayload: (payload: JwtPayload) => {
+      req.cookies[PAYLOAD_KEY] = JSON.stringify(
+        processJWTPayload(payload)
+      );
+    }
   }
+}
 
-  return jwt_payload_decoded.access;
+export const checkServerSideResponse: any = (
+  response: { success: boolean, status: number },
+  req: IncomingMessage
+ ) => {
+  if (!response.success) {
+    if (response.status === 401) {
+      return {
+        redirect: {
+          destination: req.url
+        },
+      }
+    }
+    return {
+      notFound: true,
+    }
+  }
 }

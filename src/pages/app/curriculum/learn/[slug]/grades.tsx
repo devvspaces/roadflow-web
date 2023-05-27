@@ -23,7 +23,7 @@ import Head from 'next/head';
 import LearnLayout from '@/components/layouts/learn';
 import { Grades } from '@/common/interfaces/grades';
 import { GetServerSideProps, InferGetServerSidePropsType } from 'next';
-import { getAccessTokenServerSide } from '@/services/authenticate';
+import { checkServerSideResponse, getAccessTokenServerSide } from '@/services/authenticate';
 import { api } from '@/services/api';
 import { useDispatch } from 'react-redux';
 import { setHeadState, setNavState } from '@/store/learnNavSlice';
@@ -122,10 +122,9 @@ export const getServerSideProps: GetServerSideProps<{
   const { slug } = params;
   api.getAccessToken = () => getAccessTokenServerSide(req)
   const response = await api.get_curriculum_with_grades(slug as string);
-  if (!response.success) {
-    return {
-      notFound: true,
-    }
+  const check = checkServerSideResponse(response, req)
+  if (check) {
+    return check
   }
 
   const data = response.result.data;

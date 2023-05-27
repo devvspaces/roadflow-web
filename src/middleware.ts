@@ -4,6 +4,8 @@ import { PAYLOAD_KEY } from './common/constants'
 import { LOGIN_URL } from './router/routes';
 import { JwtPayload } from './common/interfaces/token';
 import { api } from './services/api';
+import { processJWTPayload } from './services/authenticate';
+import { FetchHandler } from './services/http_handlers/fetchHandler';
 
 /**
  * Middleware to check if the user is logged in.
@@ -37,7 +39,32 @@ export async function middleware(request: NextRequest) {
   }
 
   if (jwt_payload_decoded.access_expires_at < Date.now()) {
-    return clearAndRedirect()
+
+    if (jwt_payload_decoded.refresh_expires_at < Date.now()) {
+      return clearAndRedirect()
+    }
+
+    api.setHttpHandler(new FetchHandler())
+    const response = await api.refreshJwt(jwt_payload_decoded.refresh)
+    if (!response.success || !response.result.data) {
+      return clearAndRedirect()
+    }
+
+    const result = response.result.data
+    console.log(result)
+
+    // Update the payload
+    console.log("Updating payload")
+    const r_response = NextResponse.redirect(request.url);
+    r_response.cookies.set(PAYLOAD_KEY, JSON.stringify(
+      processJWTPayload({
+        access: result.access,
+        refresh: jwt_payload_decoded.refresh,
+        access_expires_at: result.access_expires_at,
+        refresh_expires_at: jwt_payload_decoded.refresh_expires_at
+      })
+    ))
+    return r_response
   }
 }
 
