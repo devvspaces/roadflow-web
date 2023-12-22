@@ -43,9 +43,9 @@ export default function BasicStatistics() {
         What is RoadFlow doing?
       </chakra.h1>
       <SimpleGrid columns={{ base: 1, md: 3 }} spacing={{ base: 5, lg: 8 }}>
-        <StatsCard title={'We serve'} stat={'50,000 people'} />
-        <StatsCard title={'In'} stat={'30 different countries'} />
-        <StatsCard title={'Who speak'} stat={'100 different languages'} />
+        <StatsCard title={'We serve'} stat={'Everyone'} />
+        <StatsCard title={'Can be used'} stat={'In any country'} />
+        <StatsCard title={'Who'} stat={'Want to be better'} />
       </SimpleGrid>
     </Box>
   );

@@ -51,9 +51,6 @@ const Card = ({ heading, description, icon, href }: CardProps) => {
             {description}
           </Text>
         </Box>
-        <Button variant={'link'} colorScheme={'blue'} size={'sm'}>
-          Learn more
-        </Button>
       </Stack>
     </Box>
   );
@@ -75,10 +72,10 @@ export default function FeaturesComponents() {
       <Container maxW={'5xl'} mt={12}>
         <Flex flexWrap="wrap" gridGap={6} justify="center">
           <Card
-            heading={'Heading'}
+            heading={'Courses'}
             icon={<Icon as={FcAssistant} w={10} h={10} />}
             description={
-              'Lorem ipsum dolor sit amet catetur, adipisicing elit.'
+              'Enroll in courses created by experts in the field and learn at your own pace.'
             }
             href={'#'}
           />
@@ -91,26 +88,26 @@ export default function FeaturesComponents() {
             href={'#'}
           />
           <Card
-            heading={'Heading'}
+            heading={'More Experiences'}
             icon={<Icon as={FcDonate} w={10} h={10} />}
             description={
-              'Lorem ipsum dolor sit amet catetur, adipisicing elit.'
+              'Learn by doing. We provide you with the best resources to learn by doing.'
             }
             href={'#'}
           />
           <Card
-            heading={'Heading'}
+            heading={'Quizzes'}
             icon={<Icon as={FcManager} w={10} h={10} />}
             description={
-              'Lorem ipsum dolor sit amet catetur, adipisicing elit.'
+              'Test your knowledge by taking quizzes and get a certificate of completion.'
             }
             href={'#'}
           />
           <Card
-            heading={'Heading'}
+            heading={'Track Progress'}
             icon={<Icon as={FcAbout} w={10} h={10} />}
             description={
-              'Lorem ipsum dolor sit amet catetur, adipisicing elit.'
+              'Track your progress and see how you are doing compared to others.'
             }
             href={'#'}
           />

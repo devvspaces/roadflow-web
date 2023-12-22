@@ -25,13 +25,11 @@ export default function HeroComponent() {
         lineHeight={'110%'}>
         Learn by flowing <br />
         <Text as={'span'} color={'green.400'}>
-          through Roadmaps
+          through RoadMaps
         </Text>
       </Heading>
-      <Text color={'gray.500'}>
-        Monetize your content by charging your most loyal readers and reward
-        them loyalty points. Give back to your loyal readers by granting
-        them access to your pre-releases and sneak-peaks.
+      <Text color={'gray.500'} maxW={'3xl'} fontSize={{ base: 'md', lg: 'lg' }} mx={'auto !important'}>
+        Start a more effective learning journey by following a RoadMap. Enroll in fine-tuned RoadMaps created by experts in the field.
       </Text>
       <Stack
         direction={'column'}
@@ -59,7 +57,7 @@ export default function HeroComponent() {
           </Button>
         </Link>
 
-        <Box>
+        <Box display={'none'}>
           <Icon
             as={Arrow}
             color={useColorModeValue('gray.800', 'gray.300')}

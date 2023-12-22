@@ -8,7 +8,7 @@ You need to run the api first, as the frontend heavily depends on the api that p
 
 ### Running the API
 
-Visit [Roadflow API repository](https://github.com/devvspaces/roadflow-api) to set up the API.
+Visit [Roadflow API repository](https://github.com/devvspaces/roadflow-api) to set up the API. API is built in Django. Check the API for more information.
 
 ### Setup
 

@@ -1,4 +1,7 @@
 Give me a curriculum for Learning cryptocurrency trading and investment in this format
+
+Testing ai prompts
+
 {
   "curriculum_name": here,
   "description": here,
