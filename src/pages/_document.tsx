@@ -1,5 +1,5 @@
 import { Html, Head, Main, NextScript } from "next/document";
-import Script from "next/script";
+import { GoogleAnalytics } from "@next/third-parties/google";
 
 export default function Document() {
   return (
@@ -14,14 +14,7 @@ export default function Document() {
           content="learn by following your role roadmap consistently"
         />
         <link rel="icon" href="/favicon.ico" />
-        <Script src="https://www.googletagmanager.com/gtag/js?id=G-MSJ7HCLK8P" />
-        <Script id="google-analytics">
-          {`window.dataLayer = window.dataLayer || [];
-          function gtag(){dataLayer.push(arguments);}
-          gtag('js', new Date());
-
-          gtag('config', 'G-MSJ7HCLK8P');`}
-        </Script>
+        <GoogleAnalytics gaId="G-MSJ7HCLK8P" />
       </Head>
       <body>
         <Main />
