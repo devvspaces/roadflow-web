@@ -14,9 +14,9 @@ export default function Document() {
           content="learn by following your role roadmap consistently"
         />
         <link rel="icon" href="/favicon.ico" />
-        <GoogleAnalytics gaId="G-MSJ7HCLK8P" />
       </Head>
       <body>
+        <GoogleAnalytics gaId="G-MSJ7HCLK8P" />
         <Main />
         <NextScript />
       </body>

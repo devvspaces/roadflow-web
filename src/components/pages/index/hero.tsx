@@ -8,72 +8,82 @@ import {
   Icon,
   useColorModeValue,
   createIcon,
-} from '@chakra-ui/react';
-import Link from 'next/link';
+} from "@chakra-ui/react";
+import Link from "next/link";
 
 export default function HeroComponent() {
   return (
     <Stack
       as={Box}
-      textAlign={'center'}
+      textAlign={"center"}
       spacing={{ base: 8, md: 14 }}
-      py={{ base: 20, md: 36 }}>
+      py={{ base: 20, md: 36 }}
+    >
       <Heading
         fontWeight={700}
-        fontSize={{ base: '2xl', sm: '4xl', md: '6xl' }}
-        fontFamily={'Work Sans, system-ui, sans-serif'}
-        lineHeight={'110%'}>
+        fontSize={{ base: "2xl", sm: "4xl", md: "6xl" }}
+        fontFamily={"Work Sans, system-ui, sans-serif"}
+        lineHeight={"110%"}
+      >
         Learn by flowing <br />
-        <Text as={'span'} color={'green.400'}>
-          through RoadMaps
+        <Text as={"span"} color={"green.400"}>
+          through Roadmaps
         </Text>
       </Heading>
-      <Text color={'gray.500'} maxW={'3xl'} fontSize={{ base: 'md', lg: 'lg' }} mx={'auto !important'}>
-        Start a more effective learning journey by following a RoadMap. Enroll in fine-tuned RoadMaps created by experts in the field.
+      <Text
+        color={"gray.500"}
+        maxW={"3xl"}
+        fontSize={{ base: "md", lg: "lg" }}
+        mx={"auto !important"}
+      >
+        Start a more effective learning journey by following a RoadMap. Enroll
+        in fine-tuned RoadMaps created by experts in the field.
       </Text>
       <Stack
-        direction={'column'}
+        direction={"column"}
         spacing={3}
-        align={'center'}
-        alignSelf={'center'}
-        position={'relative'}>
-
+        align={"center"}
+        alignSelf={"center"}
+        position={"relative"}
+      >
         <Link href={"/signup"}>
           <Button
-            colorScheme={'green'}
-            bg={'green.400'}
-            rounded={'full'}
+            colorScheme={"green"}
+            bg={"green.400"}
+            rounded={"full"}
             px={6}
             _hover={{
-              bg: 'green.500',
-            }}>
+              bg: "green.500",
+            }}
+          >
             Get Started
           </Button>
         </Link>
 
         <Link href={"#our-story"}>
-          <Button variant={'link'} colorScheme={'blue'} size={'sm'}>
+          <Button variant={"link"} colorScheme={"blue"} size={"sm"}>
             Learn more
           </Button>
         </Link>
 
-        <Box display={'none'}>
+        <Box display={"none"}>
           <Icon
             as={Arrow}
-            color={useColorModeValue('gray.800', 'gray.300')}
+            color={useColorModeValue("gray.800", "gray.300")}
             w={71}
-            position={'absolute'}
+            position={"absolute"}
             right={-71}
-            top={'10px'}
+            top={"10px"}
           />
           <Text
-            fontSize={'lg'}
-            fontFamily={'Caveat'}
-            position={'absolute'}
-            right={'-125px'}
-            top={'-15px'}
-            transform={'rotate(10deg)'}>
-            Starting at $8/mo
+            fontSize={"lg"}
+            fontFamily={"Caveat"}
+            position={"absolute"}
+            right={"-125px"}
+            top={"-15px"}
+            transform={"rotate(10deg)"}
+          >
+            Starting at $0/mo
           </Text>
         </Box>
       </Stack>
@@ -82,8 +92,8 @@ export default function HeroComponent() {
 }
 
 const Arrow = createIcon({
-  displayName: 'Arrow',
-  viewBox: '0 0 72 24',
+  displayName: "Arrow",
+  viewBox: "0 0 72 24",
   path: (
     <path
       fillRule="evenodd"

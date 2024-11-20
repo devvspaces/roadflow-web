@@ -47,7 +47,7 @@ export default function OurStory() {
       maxW={"4xl"}
       mx={"auto"}
       id="our-story"
-      py={20}
+      px={{ base: 2, sm: 12, md: 20 }}
       columns={{ base: 1, md: 2 }}
       spacing={10}
     >
@@ -64,9 +64,9 @@ export default function OurStory() {
         >
           Our Story
         </Text>
-        <Heading>An E-Learning Product for Developers</Heading>
+        <Heading>An E-Learning Product for Learning Techies</Heading>
         <Text color={"gray.500"} fontSize={"lg"}>
-          Roadflow provides value to you by giving you structured roadmap with
+          RoadflowAI provides value to you by giving you structured roadmap with
           organized open source learning resources.
         </Text>
         <Stack
