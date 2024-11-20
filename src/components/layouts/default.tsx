@@ -3,6 +3,7 @@ import { Box, useColorModeValue } from "@chakra-ui/react";
 import Navbar from "./components/navbar";
 import FooterBar from "./components/footer";
 import Alerts from "../alert";
+import { Analytics } from "@vercel/analytics/react";
 
 export default function DefaultLayout({ children }: { children: ReactNode }) {
   const bgNav = useColorModeValue("gray.200", "gray.900");
@@ -17,6 +18,7 @@ export default function DefaultLayout({ children }: { children: ReactNode }) {
 
       <Box width={"100%"} minH={"100vh"} pb={"3rem"}>
         {children}
+        <Analytics />
       </Box>
       <FooterBar />
     </>
