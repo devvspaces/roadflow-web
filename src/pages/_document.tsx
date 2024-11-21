@@ -14,18 +14,26 @@ export default function Document() {
           content="learn by following your role roadmap consistently"
         />
         <link rel="icon" href="/favicon.ico" />
+        <Script
+          strategy="afterInteractive"
+          src="https://www.googletagmanager.com/gtag/js?id=G-MSJ7HCLK8P"
+        />
+        <Script
+          id="analytics"
+          strategy="afterInteractive"
+          dangerouslySetInnerHTML={{
+            __html: `
+            window.dataLayer = window.dataLayer || [];
+            function gtag(){dataLayer.push(arguments);}
+            gtag('js', new Date());
+            gtag('config', 'G-MSJ7HCLK8P');
+          `,
+          }}
+        />
       </Head>
       <body>
         <Main />
         <NextScript />
-        <Script src="https://www.googletagmanager.com/gtag/js?id=G-MSJ7HCLK8P" />
-        <Script id="google-analytics">
-          {`window.dataLayer = window.dataLayer || [];
-          function gtag(){dataLayer.push(arguments);}
-          gtag('js', new Date());
-
-          gtag('config', 'G-MSJ7HCLK8P');`}
-        </Script>
       </body>
     </Html>
   );

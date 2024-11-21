@@ -7,6 +7,7 @@ import { ReactElement, ReactNode } from "react";
 import { wrapper } from "../store/store";
 import { useRouter } from "next/router";
 import React, { useEffect } from "react";
+import { Analytics } from "@vercel/analytics/react";
 import NProgress from "nprogress";
 import "nprogress/nprogress.css";
 
@@ -45,6 +46,7 @@ function App({ Component, pageProps }: AppPropsWithLayout) {
   return (
     <ChakraProvider>
       <DefaultLayout>{getLayout(<Component {...pageProps} />)}</DefaultLayout>
+      <Analytics />
     </ChakraProvider>
   );
 }
