@@ -1,7 +1,6 @@
 import {
   Box,
   Heading,
-  Container,
   Text,
   Button,
   Stack,
@@ -10,14 +9,28 @@ import {
   createIcon,
 } from "@chakra-ui/react";
 import Link from "next/link";
+import { useEffect, useState } from "react";
 
 export default function HeroComponent() {
+  let wordings = ["example", "practicing", "studying"];
+  let [wording, setWording] = useState(0);
+
+  useEffect(() => {
+    let timer = setInterval(() => {
+      setWording((wording + 1) % 3);
+    }, 2000);
+    return () => {
+      clearInterval(timer);
+    };
+  });
+
   return (
     <Stack
       as={Box}
       textAlign={"center"}
-      spacing={{ base: 8, md: 14 }}
-      py={{ base: 20, md: 36 }}
+      spacing={{ base: 8, md: 8 }}
+      py={{ base: 20, md: 40 }}
+      px={4}
     >
       <Heading
         fontWeight={700}
@@ -25,10 +38,12 @@ export default function HeroComponent() {
         fontFamily={"Work Sans, system-ui, sans-serif"}
         lineHeight={"110%"}
       >
-        Learn by flowing <br />
+        Learn by{" "}
         <Text as={"span"} color={"green.400"}>
-          through Roadmaps
-        </Text>
+          {wordings[wording]}
+        </Text>{" "}
+        <br />
+        with road maps
       </Heading>
       <Text
         color={"gray.500"}
@@ -36,8 +51,8 @@ export default function HeroComponent() {
         fontSize={{ base: "md", lg: "lg" }}
         mx={"auto !important"}
       >
-        Start a more effective learning journey by following a RoadMap. Enroll
-        in fine-tuned RoadMaps created by experts in the field.
+        Improve your learning journey by using interactive road maps and
+        quizzes. Enroll in fine-tuned courses curated for you.
       </Text>
       <Stack
         direction={"column"}
@@ -55,13 +70,14 @@ export default function HeroComponent() {
             _hover={{
               bg: "green.500",
             }}
+            size={"lg"}
           >
-            Get Started
+            Start learning
           </Button>
         </Link>
 
-        <Link href={"#our-story"}>
-          <Button variant={"link"} colorScheme={"blue"} size={"sm"}>
+        <Link href={"#how-it-works"}>
+          <Button variant={"link"} colorScheme={"green"} size={"sm"}>
             Learn more
           </Button>
         </Link>

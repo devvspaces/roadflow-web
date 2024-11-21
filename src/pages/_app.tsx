@@ -10,6 +10,7 @@ import React, { useEffect } from "react";
 import { Analytics } from "@vercel/analytics/react";
 import NProgress from "nprogress";
 import "nprogress/nprogress.css";
+import { AppProvider } from "@/lib/context";
 
 export type NextPageWithLayout<P = {}, IP = P> = NextPage<P, IP> & {
   getLayout?: (page: ReactElement) => ReactNode;
@@ -45,7 +46,9 @@ function App({ Component, pageProps }: AppPropsWithLayout) {
 
   return (
     <ChakraProvider>
-      <DefaultLayout>{getLayout(<Component {...pageProps} />)}</DefaultLayout>
+      <AppProvider>
+        <DefaultLayout>{getLayout(<Component {...pageProps} />)}</DefaultLayout>
+      </AppProvider>
       <Analytics />
     </ChakraProvider>
   );

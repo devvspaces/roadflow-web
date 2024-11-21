@@ -11,13 +11,12 @@ import {
   MenuList,
   MenuItem,
   MenuDivider,
-  useDisclosure,
   useColorModeValue,
   Stack,
-  Heading,
   useColorMode,
   Link,
   Image,
+  Heading,
 } from "@chakra-ui/react";
 import { HamburgerIcon, CloseIcon } from "@chakra-ui/icons";
 import { MoonIcon, SunIcon } from "@chakra-ui/icons";
@@ -67,10 +66,10 @@ export default function Navbar() {
       name: "Curriculums",
       href: "/app/curriculum/search",
     },
-    {
-      name: "Events",
-      href: "/app/events",
-    },
+    // {
+    //   name: "Events",
+    //   href: "/app/events",
+    // },
   ];
   const user = useCurrentUser();
   const { logout } = useLogout();
@@ -82,7 +81,7 @@ export default function Navbar() {
   return (
     <>
       <Flex
-        h={20}
+        h={{ base: "3.5rem", md: 20 }}
         alignItems={"center"}
         justifyContent={"space-between"}
         maxWidth={"1300px"}
@@ -107,8 +106,12 @@ export default function Navbar() {
               alignItems={"center"}
               gap={".7rem"}
             >
-              <Image src={"/logo.png"} alt={"RoadFlow"} w={"40px"} />
-              <Image src={"/profile.png"} alt={"RoadFlow"} h={"25px"} />
+              <Image
+                src={"/logo.png"}
+                alt={"RoadFlow"}
+                w={{ base: "25px", md: "40px" }}
+              />
+              <Heading size={"md"}>RoadFlowAI</Heading>
             </Link>
           </Box>
           <HStack as={"nav"} spacing={4} display={{ base: "none", md: "flex" }}>
@@ -125,12 +128,14 @@ export default function Navbar() {
             flex={{ base: 1, md: 0 }}
             justify={"flex-end"}
             direction={"row"}
+            align={"center"}
             spacing={6}
           >
             {!user && (
               <>
                 <Button
                   as={NextLink}
+                  display={{ base: "none", md: "inline-flex" }}
                   fontSize={"sm"}
                   fontWeight={400}
                   variant={"link"}
@@ -150,13 +155,13 @@ export default function Navbar() {
                     bg: "pink.300",
                   }}
                 >
-                  Sign Up
+                  Enroll
                 </Button>
               </>
             )}
             <Button
               display={"block"}
-              colorScheme="blue"
+              colorScheme="green"
               onClick={toggleColorMode}
               size={"sm"}
             >
@@ -199,14 +204,27 @@ export default function Navbar() {
 
       {menuOpen ? (
         <Box pb={4} display={{ md: "none" }}>
-          <Stack as={"nav"} spacing={4}>
-            {links.map((link, index) => (
-              <NavLink key={index} href={link.href}>
-                {link.name}
-              </NavLink>
-            ))}
-          </Stack>
+          {user && (
+            <Stack as={"nav"} spacing={4}>
+              {links.map((link, index) => (
+                <NavLink key={index} href={link.href}>
+                  {link.name}
+                </NavLink>
+              ))}
+            </Stack>
+          )}
           <Stack spacing={4} mt={7}>
+            <Button
+              as={"a"}
+              fontSize={"sm"}
+              fontWeight={600}
+              color={"white"}
+              colorScheme="blue"
+              href={"/login"}
+              variant={"ghost"}
+            >
+              Sign In
+            </Button>
             <Button
               as={"a"}
               fontSize={"sm"}
@@ -218,7 +236,7 @@ export default function Navbar() {
                 bg: "pink.300",
               }}
             >
-              Sign Up
+              Start learning
             </Button>
           </Stack>
         </Box>
