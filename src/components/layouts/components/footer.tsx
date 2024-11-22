@@ -2,16 +2,20 @@ import {
   Box,
   chakra,
   Container,
+  Divider,
   Flex,
   Heading,
+  HStack,
   Image,
   Stack,
   Text,
   useColorModeValue,
   VisuallyHidden,
+  VStack,
 } from "@chakra-ui/react";
 import { FaGithub, FaInstagram, FaTwitter, FaYoutube } from "react-icons/fa";
 import { ReactNode } from "react";
+import Link from "next/link";
 
 const SocialButton = ({
   children,
@@ -61,11 +65,30 @@ export default function FooterBar() {
         justify={{ base: "center", md: "space-between" }}
         align={{ base: "center", md: "center" }}
       >
-        <Flex align={"center"} gap={".7rem"}>
-          <Image src={"/logo.png"} alt={"RoadFlow"} w={"30px"} />
-          <Heading fontSize={"2xl"}>RoadFlowAI</Heading>
-        </Flex>
-        <Text>© {new Date().getFullYear()} RoadFlowAI</Text>
+        <HStack>
+          <Link
+            style={{ textDecoration: "underline" }}
+            href={"/privacy-policy"}
+          >
+            Privacy Policy
+          </Link>
+          <Divider orientation="vertical" h={6} />
+          <Link
+            style={{ textDecoration: "underline" }}
+            href={"/terms-of-service"}
+          >
+            Terms of Service
+          </Link>
+        </HStack>
+        <Text>
+          © {new Date().getFullYear()} RoadFlowAI. Made with ❤️ by{" "}
+          <Link
+            style={{ textDecoration: "underline" }}
+            href={"https://x.com/netrobeweb/"}
+          >
+            Netrobe
+          </Link>
+        </Text>
         <Stack direction={"row"} spacing={6}>
           <SocialButton label={"Twitter"} href={"https://x.com/netrobeweb/"}>
             <FaTwitter />

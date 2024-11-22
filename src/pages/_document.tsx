@@ -11,7 +11,7 @@ export default function Document() {
         />
         <meta
           name="description"
-          content="learn by following your role roadmap consistently"
+          content="Improve your tech learning journey by flowing through"
         />
         <link rel="icon" href="/favicon.ico" />
         <Script

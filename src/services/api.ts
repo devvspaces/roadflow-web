@@ -5,14 +5,20 @@ import { RefreshPayloadResponse } from "@/common/interfaces/token";
 import { RegisterDto } from "@/common/dtos/register";
 import { User } from "@/common/interfaces/user";
 import { GetCurriculumDto } from "@/common/dtos/curriculum";
-import { CurriculumListResponse, CurriculumPageResponse, CurriculumWithResources, EnrolledCurriculumPageResponse, EnrolledCurriculumsResponse, SyllabiTopicResponse } from "@/common/interfaces/curriculum";
+import {
+  CurriculumListResponse,
+  CurriculumPageResponse,
+  CurriculumWithResources,
+  EnrolledCurriculumPageResponse,
+  EnrolledCurriculumsResponse,
+  SyllabiTopicResponse,
+} from "@/common/interfaces/curriculum";
 import { PaginatedResponse } from "@/common/interfaces/response";
 import { getAccessToken } from "./authenticate";
 import { QuizSubmitResponse, TopicQuiz } from "@/common/interfaces/quiz";
 import { DynamicObject } from "@/common/interfaces";
 import { Grades } from "@/common/interfaces/grades";
 import { EventResponse } from "@/common/interfaces/events";
-
 
 export class ApiService extends BaseApiClient {
   getAccessToken: typeof getAccessToken = getAccessToken;
@@ -21,21 +27,29 @@ export class ApiService extends BaseApiClient {
     if (BASE_URL === undefined) {
       throw new Error("BASE_URL is undefined");
     }
-    super(BASE_URL, {})
+    super(BASE_URL, {});
   }
 
   async login(email: string, password: string) {
     return this.post<LoginResponse>("/account/login", {
       body: {
         email,
-        password
-      }
+        password,
+      },
     });
   }
 
   async register(data: RegisterDto) {
     return this.post<User>("/account/register", {
-      body: data
+      body: data,
+    });
+  }
+
+  async google(id_token: string) {
+    return this.post<LoginResponse>("/account/google", {
+      body: {
+        id_token,
+      },
     });
   }
 
@@ -43,8 +57,8 @@ export class ApiService extends BaseApiClient {
     return this.post<User>("/account/validate-otp", {
       body: {
         email,
-        otp
-      }
+        otp,
+      },
     });
   }
 
@@ -56,14 +70,14 @@ export class ApiService extends BaseApiClient {
     return {
       ...data,
       headers: {
-        "Authorization": `Bearer ${tokens.access}`
-      }
-    }
+        Authorization: `Bearer ${tokens.access}`,
+      },
+    };
   }
 
   async refreshJwt(refresh: string) {
     return this.post<RefreshPayloadResponse>("/account/token/user/refresh", {
-      body: { refresh }
+      body: { refresh },
     });
   }
 
@@ -71,116 +85,141 @@ export class ApiService extends BaseApiClient {
     const body = {
       query: {
         search: data.search || "",
-      }
-    }
+      },
+    };
     return this.get<PaginatedResponse<CurriculumListResponse>>(
-      "/curriculum", this.authorize(body));
+      "/curriculum",
+      this.authorize(body)
+    );
   }
 
   async get_curriculum_with_resources(slug: string) {
     return this.get<CurriculumWithResources>(
-      "/curriculum/resources/{slug}", this.authorize({
+      "/curriculum/resources/{slug}",
+      this.authorize({
         params: {
-          slug
-        }
-      }));
+          slug,
+        },
+      })
+    );
   }
 
   async get_curriculum_with_grades(slug: string) {
     return this.get<Grades>(
-      "/curriculum/grades/{slug}/", this.authorize({
+      "/curriculum/grades/{slug}/",
+      this.authorize({
         params: {
-          slug
-        }
-      }));
+          slug,
+        },
+      })
+    );
   }
-  
+
   async get_single_curriculum(slug: string) {
     return this.get<CurriculumPageResponse>(
-      "/curriculum/{slug}", this.authorize({
+      "/curriculum/{slug}",
+      this.authorize({
         params: {
-          slug
-        }
-      }));
+          slug,
+        },
+      })
+    );
   }
 
   async check_enrolled_in_curriculum(slug: string) {
     const response = await this.get<CurriculumPageResponse>(
-      "/curriculum/check-enrolled/{slug}", this.authorize({
+      "/curriculum/check-enrolled/{slug}",
+      this.authorize({
         params: {
-          slug
-        }
-      }));
-    return response.success
+          slug,
+        },
+      })
+    );
+    return response.success;
   }
 
   async get_single_enrolled_curriculum(slug: string) {
     return this.get<EnrolledCurriculumPageResponse>(
-      "/curriculum/enrolled/{slug}", this.authorize({
+      "/curriculum/enrolled/{slug}",
+      this.authorize({
         params: {
-          slug
-        }
-      }));
+          slug,
+        },
+      })
+    );
   }
 
   async get_syllabi_progress(slug: string) {
     return this.get<SyllabiTopicResponse>(
-      "/curriculum/topic/{slug}/", this.authorize({
+      "/curriculum/topic/{slug}/",
+      this.authorize({
         params: {
-          slug
-        }
-      }));
+          slug,
+        },
+      })
+    );
   }
 
   async get_enrolled_curriculums() {
     return this.get<PaginatedResponse<EnrolledCurriculumsResponse>>(
-      "/curriculum/enrolled/", this.authorize({}));
+      "/curriculum/enrolled/",
+      this.authorize({})
+    );
   }
 
   async get_topic_quiz(slug: string) {
     return this.get<TopicQuiz>(
-      "/curriculum/topic/quiz/{slug}/", this.authorize({
+      "/curriculum/topic/quiz/{slug}/",
+      this.authorize({
         params: {
-          slug
-        }
-      }));
+          slug,
+        },
+      })
+    );
   }
 
   async submit_topic_quiz(slug: string, body: DynamicObject) {
     return this.post<QuizSubmitResponse>(
-      "/curriculum/topic/quiz/submit/{slug}/", this.authorize({
+      "/curriculum/topic/quiz/submit/{slug}/",
+      this.authorize({
         params: {
-          slug
+          slug,
         },
-        body
-      }));
+        body,
+      })
+    );
   }
 
   async enroll_user(slug: string) {
     return this.post<{ curriculum: string }>(
-      "/curriculum/enroll", this.authorize({
+      "/curriculum/enroll",
+      this.authorize({
         body: {
-          "curriculum": slug
-        }
-      }));
+          curriculum: slug,
+        },
+      })
+    );
   }
 
-  async review(slug: string, body: { review: string, rating: string }) {
+  async review(slug: string, body: { review: string; rating: string }) {
     return this.post<{ curriculum: string }>(
-      "/curriculum/submit-review/{slug}", this.authorize({
+      "/curriculum/submit-review/{slug}",
+      this.authorize({
         params: {
-          slug
+          slug,
         },
         body: {
           rating: parseInt(body.rating),
-          review: body.review
-        }
-      }));
+          review: body.review,
+        },
+      })
+    );
   }
 
   async get_upcoming_events() {
     return this.get<PaginatedResponse<EventResponse>>(
-      "/curriculum/upcoming-events/");
+      "/curriculum/upcoming-events/"
+    );
   }
 }
 
