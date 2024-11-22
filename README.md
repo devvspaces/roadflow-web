@@ -1,6 +1,6 @@
-# Roadflow Frontend
+# RoadflowAI Frontend
 
-This is the frontend for Roadflow website, it curates curriculums and syllabus for tech roles and tools for new developers or experts to use. It allows progress tracking, curriculum reviews using MindsDB, and quizzes to verify that students understand the concept taught. Roadflow does not create new video or article resources but leverages on free contents on the internet. Sources for resources includes but not limited to Youtube, Hashnode, Medium, Coursera, and Udemy etc.
+This is the frontend for RoadflowAI website, it curates curriculums and syllabus for tech roles and tools for new developers or experts to use. It allows progress tracking, curriculum reviews using MindsDB, and quizzes to verify that students understand the concept taught. RoadflowAI does not create new video or article resources but leverages on free contents on the internet. Sources for resources includes but not limited to Youtube, Hashnode, Medium, Coursera, and Udemy etc.
 
 ## Getting Started
 
@@ -8,7 +8,7 @@ You need to run the api first, as the frontend heavily depends on the api that p
 
 ### Running the API
 
-Visit [Roadflow API repository](https://github.com/devvspaces/roadflow-api) to set up the API. API is built in Django. Check the API for more information.
+Visit [RoadflowAI API repository](https://github.com/devvspaces/roadflow-api) to set up the API. API is built in Django. Check the API for more information.
 
 ### Setup
 
@@ -40,10 +40,9 @@ You can check out [the Next.js GitHub repository](https://github.com/vercel/next
 ## ⛏️ Built Using
 
 - [NextJs](https://nextjs.org/docs) - React Framework
-- [Roadflow API](https://github.com/devvspaces/roadflow-api) - Roadflow REST API
+- [RoadflowAI API](https://github.com/devvspaces/roadflow-api) - RoadflowAI REST API
 - [Chakra](https://chakra-ui.com/) - Frontend Design Library
 - [Formik](https://formik.org/) - Building forms and validation
-
 
 ## Deploy on Vercel
 

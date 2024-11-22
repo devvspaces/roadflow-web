@@ -24,7 +24,7 @@ export default function DefaultLayout({ children }: { children: ReactNode }) {
       }}
     >
       {isConfettiVisible && <Confetti width={windowWidth} />}
-      <Box bg={bgNav} px={{ base: 3, md: 5 }} borderBottomRadius={".7rem"}>
+      <Box bg={bgNav} px={{ base: 3, md: 5 }}>
         <Navbar />
       </Box>
 

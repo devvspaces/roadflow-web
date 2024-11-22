@@ -19,7 +19,7 @@ export default function Page({ curriculums }: InferGetServerSidePropsType<typeof
   return (
     <>
       <Head>
-        <title>RoadFlow - Home</title>
+        <title>RoadflowAI - Home</title>
       </Head>
 
       <Box width={"100%"}>

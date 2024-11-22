@@ -180,7 +180,7 @@ export default function Navbar() {
                   />
                 </MenuButton>
                 <MenuList>
-                  <MenuItem as={"a"} href={"/app/profile"}>
+                  <MenuItem as={NextLink} href={"/app/profile"}>
                     My Account
                   </MenuItem>
                   <MenuDivider />

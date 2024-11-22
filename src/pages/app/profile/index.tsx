@@ -96,7 +96,7 @@ export default function Profile() {
                 <FormLabel>Bio</FormLabel>
                 <Textarea value={user?.profile.bio} />
               </FormControl>
-              <Stack spacing={10} pt={2}>
+              {/* <Stack spacing={10} pt={2}>
                 <Button
                   loadingText="Submitting"
                   size="lg"
@@ -115,7 +115,7 @@ export default function Profile() {
                     Change your password
                   </Link>
                 </Text>
-              </Stack>
+              </Stack> */}
             </Stack>
           </Box>
         </Stack>
