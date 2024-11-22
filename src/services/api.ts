@@ -53,6 +53,23 @@ export class ApiService extends BaseApiClient {
     });
   }
 
+  async twitter(id_token: string) {
+    return this.post<LoginResponse>("/account/twitter", {
+      body: {
+        id_token,
+      },
+    });
+  }
+
+  async github(id_token: string, access_token: string) {
+    return this.post<LoginResponse>("/account/github", {
+      body: {
+        id_token,
+        access_token,
+      },
+    });
+  }
+
   async verify_account(email: string, otp: string) {
     return this.post<User>("/account/validate-otp", {
       body: {
