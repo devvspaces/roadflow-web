@@ -36,7 +36,7 @@ const Card = ({ heading, description, icon }: CardProps) => {
           justify={"center"}
           color={"white"}
           rounded={"full"}
-          bg={useColorModeValue("green.100", "green.600")}
+          bg={useColorModeValue("green.300", "green.600")}
           mb={5}
         >
           {icon}

@@ -7,12 +7,13 @@ import {
   Container,
   HStack,
   Heading,
+  Skeleton,
   Text,
   useColorModeValue,
   useToast,
 } from "@chakra-ui/react";
 import { StarIcon } from "@chakra-ui/icons";
-import React from "react";
+import React, { useEffect, useState } from "react";
 import {
   CurriculumDifficulty,
   CurriculumPageResponse,
@@ -28,18 +29,36 @@ import {
 } from "@/services/authenticate";
 import NextLink from "next/link";
 import { useRouter } from "next/router";
+import { useAppDispatch, useAppSelector } from "@/store/hooks";
+import {
+  fetchDetail,
+  selectCurriculumDetail,
+  selectFetchingDetail,
+} from "@/store/curriculumThunk";
 
-export default function Page({
-  data,
-}: InferGetServerSidePropsType<typeof getServerSideProps>) {
-  const curriculum = data;
+export default function Page() {
+  const dispatch = useAppDispatch();
+  const curriculum = useAppSelector(selectCurriculumDetail);
+  const fetching = useAppSelector(selectFetchingDetail);
   const router = useRouter();
-  const [loading, setLoading] = React.useState(false);
+  const [loading, setLoading] = useState(false);
   const toast = useToast();
+  const [isEnrolled, setIsEnrolled] = useState<boolean | null>(null);
+
+  useEffect(() => {
+    // @ts-ignore
+    dispatch(fetchDetail(router.query.slug as string));
+    (async () => {
+      const response = await api.check_enrolled_in_curriculum(
+        router.query.slug as string
+      );
+      setIsEnrolled(response);
+    })();
+  }, [dispatch, router.query.slug]);
 
   const registerUser = async () => {
     setLoading(true);
-    const response = await api.enroll_user(data.slug);
+    const response = await api.enroll_user(router.query.slug as string);
     setLoading(false);
     if (response.success) {
       toast({
@@ -51,7 +70,9 @@ export default function Page({
         position: "top",
       });
       router.push(
-        `/app/curriculum/learn/${encodeURIComponent(data.slug)}/home`
+        `/app/curriculum/learn/${encodeURIComponent(
+          router.query.slug as string
+        )}/home`
       );
       return;
     }
@@ -67,10 +88,27 @@ export default function Page({
 
   const bgNav = useColorModeValue("gray.200", "#090a10");
 
+  if (fetching) {
+    return (
+      <Container maxW={"1300px"} py={"3rem"}>
+        <Skeleton height={"100px"} width={"100%"} mb={5} />
+        <Skeleton height={"300px"} width={"100%"} mb={5} />
+      </Container>
+    );
+  }
+
+  if (!curriculum) {
+    return (
+      <Container maxW={"1300px"} py={"3rem"}>
+        <Text>Curriculum not found.</Text>
+      </Container>
+    );
+  }
+
   return (
     <>
       <Head>
-        <title>RoadflowAI - Course {curriculum.name}</title>
+        <title>RoadflowAI - Course {curriculum?.name}</title>
       </Head>
 
       <Box width={"100%"} bg={bgNav}>
@@ -88,17 +126,17 @@ export default function Page({
 
               <HStack w={"100%"} justify={"space-between"} align={"center"}>
                 <Box>
-                  <Heading mb={5}>{curriculum.name}</Heading>
+                  <Heading mb={5}>{curriculum?.name}</Heading>
                   <HStack spacing={5}>
                     <Badge colorScheme="blackAlpha" p={2}>
-                      {curriculum.level}
+                      {getDifficulty(curriculum?.difficulty!!)}
                     </Badge>
                     <Badge colorScheme="blackAlpha" p={2}>
-                      {curriculum.syllabus.length} weeks
+                      {curriculum?.syllabus.length} weeks
                     </Badge>
                   </HStack>
                 </Box>
-                {data.is_enrolled ? (
+                {isEnrolled ? (
                   <Button
                     as={NextLink}
                     transition={".3s"}
@@ -112,7 +150,7 @@ export default function Page({
                       bgSize: "200%",
                     }}
                     href={`/app/curriculum/learn/${encodeURIComponent(
-                      data.slug
+                      router.query.slug as string
                     )}/home`}
                     py={8}
                   >
@@ -135,6 +173,7 @@ export default function Page({
                       await registerUser();
                     }}
                     isLoading={loading}
+                    isDisabled={isEnrolled === null}
                   >
                     Start Learning
                   </Button>
@@ -158,17 +197,17 @@ export default function Page({
             <Heading size={"md"} mb={4} textTransform={"uppercase"}>
               Description
             </Heading>
-            <Text lineHeight={1.8}>{curriculum.description}</Text>
+            <Text lineHeight={1.8}>{curriculum?.description}</Text>
 
             <Heading size={"md"} mt={10} mb={4} textTransform={"uppercase"}>
               Objective
             </Heading>
-            <Text lineHeight={1.8}>{curriculum.objective}</Text>
+            <Text lineHeight={1.8}>{curriculum?.objective}</Text>
 
             <Heading size={"md"} mt={10} mb={4} textTransform={"uppercase"}>
               Prerequisites
             </Heading>
-            <Text lineHeight={1.8}>{curriculum.prerequisites}</Text>
+            <Text lineHeight={1.8}>{curriculum?.prerequisites}</Text>
           </Box>
 
           {/* <Box
@@ -214,7 +253,7 @@ export default function Page({
           </Box>
 
           <Accordion mt={"3rem"} defaultIndex={[0]} allowMultiple>
-            {curriculum.syllabus.map((item, index) => {
+            {curriculum?.syllabus.map((item, index) => {
               return (
                 <SyllabiWeek
                   key={index}
@@ -230,41 +269,3 @@ export default function Page({
     </>
   );
 }
-
-export const getServerSideProps: GetServerSideProps<{
-  data: CurriculumPageResponse & {
-    level: string;
-    is_enrolled: boolean;
-  };
-}> = async ({ params, req }) => {
-  if (!params) {
-    return {
-      notFound: true,
-    };
-  }
-
-  const { slug } = params;
-  api.getAccessToken = () => getAccessTokenServerSide(req);
-  const response = await api.get_single_curriculum(slug as string);
-  const check = checkServerSideResponse(response, req);
-  if (check) {
-    return check;
-  }
-
-  const data = response.result.data;
-  if (!data) {
-    throw new Error("Invalid response");
-  }
-
-  const curriculum = {
-    ...data,
-    level: getDifficulty(data.difficulty as CurriculumDifficulty),
-    is_enrolled: await api.check_enrolled_in_curriculum(slug as string),
-  };
-
-  return {
-    props: {
-      data: curriculum,
-    },
-  };
-};

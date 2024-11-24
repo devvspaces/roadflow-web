@@ -19,6 +19,7 @@ import {
   useColorModeValue,
   Card,
   CardBody,
+  useToast,
 } from "@chakra-ui/react";
 import Head from "next/head";
 import LearnLayout from "@/components/layouts/learn";
@@ -27,10 +28,13 @@ import {
   checkServerSideResponse,
   getAccessTokenServerSide,
 } from "@/services/authenticate";
-import { GetServerSideProps, InferGetServerSidePropsType } from "next";
 import { SyllabiTopicResponse } from "@/common/interfaces/curriculum";
-import { useDispatch } from "react-redux";
-import { setHeadState, setNavState } from "@/store/learnNavSlice";
+import {
+  selectLoading,
+  setHeadState,
+  setLoading,
+  setNavState,
+} from "@/store/learnNavSlice";
 import { ResourceType } from "@/common/interfaces/resource";
 import { VideoComponent } from "@/components/video";
 import { TopicQuiz } from "@/common/interfaces/quiz";
@@ -39,23 +43,47 @@ import { DynamicObject } from "@/common/interfaces";
 import { useRouter } from "next/router";
 import NProgress from "nprogress";
 import CountdownTimer from "@/components/countdown";
+import { useAppDispatch, useAppSelector } from "@/store/hooks";
 
-export default function Page({
-  data,
-}: InferGetServerSidePropsType<typeof getServerSideProps>) {
-  const dispatch = useDispatch();
+export default function Page() {
+  const dispatch = useAppDispatch();
   const reasonCM = useColorModeValue("red.200", "red.700");
   const quizAlertBg = useColorModeValue("gray.100", "gray.700");
+  const toast = useToast();
 
   const [quizOpen, openQuiz] = useState(false);
   const [quiz, setQuiz] = useState<TopicQuiz>();
   const [quizMark, setQuizMark] = useState<number>();
   const [remainingTime, setRemainingTime] = useState<number>(0);
 
+  const loading = useAppSelector(selectLoading);
+  const [data, setData] = useState<SyllabiTopicResponse | null>(null);
   const router = useRouter();
+
+  useEffect(() => {
+    (async () => {
+      dispatch(setLoading(true));
+      const res = await api.get_syllabi_progress(router.query.topic as string);
+      if (res.success) {
+        setData(res.result.data!!);
+      } else {
+        toast({
+          title: "Failed to load topic",
+          description:
+            "Please try again, if the problem persists contact our support team",
+          status: "error",
+          duration: 9000,
+          isClosable: true,
+        });
+      }
+      dispatch(setLoading(false));
+    })();
+  }, [dispatch, toast, router.query.topic]);
+
   const { slug } = router.query;
 
   useEffect(() => {
+    if (!data) return;
     setQuiz(undefined);
     openQuiz(false);
     setQuizMark(undefined);
@@ -72,7 +100,7 @@ export default function Page({
     );
 
     dispatch(setHeadState(data.syllabi.title));
-  }, [dispatch, data, slug, router, setQuiz]);
+  }, [dispatch, data, slug]);
 
   const toggleQuiz = async () => {
     openQuiz(!quizOpen);
@@ -80,6 +108,22 @@ export default function Page({
       await loadQuiz();
     }
   };
+
+  if (loading) {
+    return (
+      <Box>
+        <Skeleton height={"300px"} width={"100%"} mb={5} />
+      </Box>
+    );
+  }
+
+  if (!data) {
+    return (
+      <Box>
+        <Text>Topic not found.</Text>
+      </Box>
+    );
+  }
 
   const loadQuiz = async () => {
     const response = await api.get_topic_quiz(data.topic.slug);
@@ -100,6 +144,7 @@ export default function Page({
   };
 
   const readings: ReactElement[] = [];
+
   data.topic.resources.forEach((item, index) => {
     if (item.rtype == ResourceType.Article) {
       readings.push(
@@ -119,7 +164,7 @@ export default function Page({
     }
   });
 
-  const getFormikIntial = (quiz: TopicQuiz) => {
+  const getFormikInitial = (quiz: TopicQuiz) => {
     const initialValues: DynamicObject = {};
     quiz.quiz.forEach((item, index) => {
       initialValues[item.id.toString()] = "";
@@ -131,7 +176,7 @@ export default function Page({
     <>
       <Head>
         <title>
-          RoadflowAI- {data.syllabi.title} : {data.topic.title}
+          RoadflowAI - {data.syllabi.title} : {data.topic.title}
         </title>
       </Head>
 
@@ -249,7 +294,7 @@ export default function Page({
 
           {quiz !== undefined && quiz.quiz.length != 0 ? (
             <Formik
-              initialValues={getFormikIntial(quiz)}
+              initialValues={getFormikInitial(quiz)}
               onSubmit={async (values, { setFieldError }) => {
                 // Validate
                 let valid = true;
@@ -355,33 +400,4 @@ export default function Page({
 
 Page.getLayout = function getLayout(page: ReactElement) {
   return <LearnLayout>{page}</LearnLayout>;
-};
-
-export const getServerSideProps: GetServerSideProps<{
-  data: SyllabiTopicResponse;
-}> = async ({ params, req }) => {
-  if (!params) {
-    return {
-      notFound: true,
-    };
-  }
-
-  const { topic } = params;
-  api.getAccessToken = () => getAccessTokenServerSide(req);
-  const response = await api.get_syllabi_progress(topic as string);
-  const check = checkServerSideResponse(response, req);
-  if (check) {
-    return check;
-  }
-
-  const data = response.result.data;
-  if (!data) {
-    throw new Error("Invalid response");
-  }
-
-  return {
-    props: {
-      data,
-    },
-  };
 };

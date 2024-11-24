@@ -20,6 +20,118 @@ import { DynamicObject } from "@/common/interfaces";
 import { Grades } from "@/common/interfaces/grades";
 import { EventResponse } from "@/common/interfaces/events";
 
+import axios, { CancelTokenSource } from "axios";
+
+class RefreshTokenExpiredError extends Error {
+  constructor() {
+    super("Refresh token expired");
+  }
+}
+
+// Create a cancellation token manager
+class CancelTokenManager {
+  public sourceMap: Map<string, CancelTokenSource>;
+
+  constructor() {
+    this.sourceMap = new Map();
+  }
+
+  addToken(key: string) {
+    if (this.sourceMap.has(key)) {
+      // If a request with the same key is already in progress, cancel it
+      // this.sourceMap.get(key)?.cancel("Duplicate request canceled");
+    }
+
+    const source = axios.CancelToken.source();
+    this.sourceMap.set(key, source);
+    return source.token;
+  }
+
+  removeToken(key: string) {
+    this.sourceMap.delete(key);
+  }
+}
+
+const cancelTokenManager = new CancelTokenManager();
+
+export const API = axios.create({
+  baseURL: BASE_URL,
+});
+
+API.interceptors.request.use((req) => {
+  const jwt = getAccessToken();
+  if (jwt && jwt.access) {
+    req.headers.Authorization = `Bearer ${jwt.access}`;
+  }
+
+  // Generate a unique key for the request
+  const requestKey = JSON.stringify(req);
+
+  // Add a cancel token for the request
+  req.cancelToken = cancelTokenManager.addToken(requestKey);
+
+  return req;
+});
+
+API.interceptors.response.use(
+  (response) => {
+    // Remove the cancel token for the completed request
+    const requestKey = JSON.stringify(response.config);
+    cancelTokenManager.removeToken(requestKey);
+    return response;
+  },
+  (error) => {
+    try {
+      if (error?.response?.status === 401) {
+        const jwt = getAccessToken();
+        if (jwt && jwt.refresh) {
+          if (jwt.refresh_expires_at < Date.now()) {
+            jwt.clear();
+            throw new RefreshTokenExpiredError();
+          }
+
+          api
+            .refreshJwt(jwt.refresh)
+            .then((res) => {
+              if (!res.success || !res.result.data) {
+                jwt.clear();
+                throw new RefreshTokenExpiredError();
+              }
+              const result = res.result.data;
+              console.log("Updating Access Token", result);
+              jwt.updatePayload({
+                access: result.access,
+                refresh: jwt.refresh,
+                access_expires_at: result.access_expires_at,
+                refresh_expires_at: jwt.refresh_expires_at,
+              });
+
+              // Retry the failed request
+              const requestKey = JSON.stringify(error.config);
+              const newRequest = {
+                ...error.config,
+                cancelToken: cancelTokenManager.addToken(requestKey),
+              };
+              return API(newRequest);
+            })
+            .catch((err) => {
+              console.error("Error refreshing token", err);
+              jwt.clear();
+              throw new RefreshTokenExpiredError();
+            });
+        }
+      }
+    } catch (e) {
+      window.location.href = "/login";
+      return;
+    }
+    // Remove the cancel token for the failed request
+    const requestKey = JSON.stringify(error.config);
+    cancelTokenManager.removeToken(requestKey);
+    return Promise.reject(error);
+  }
+);
+
 export class ApiService extends BaseApiClient {
   getAccessToken: typeof getAccessToken = getAccessToken;
 
@@ -28,6 +140,7 @@ export class ApiService extends BaseApiClient {
       throw new Error("BASE_URL is undefined");
     }
     super(BASE_URL, {});
+    this.setHttpHandler(API);
   }
 
   async login(email: string, password: string) {
@@ -71,10 +184,18 @@ export class ApiService extends BaseApiClient {
   }
 
   async verify_account(email: string, otp: string) {
-    return this.post<User>("/account/validate-otp", {
+    return this.post<LoginResponse>("/account/validate-otp", {
       body: {
         email,
         otp,
+      },
+    });
+  }
+
+  async resend_otp(email: string) {
+    return this.post("/account/resend-otp", {
+      body: {
+        email,
       },
     });
   }
@@ -86,9 +207,9 @@ export class ApiService extends BaseApiClient {
     }
     return {
       ...data,
-      headers: {
-        Authorization: `Bearer ${tokens.access}`,
-      },
+      // headers: {
+      //   Authorization: `Bearer ${tokens.access}`,
+      // },
     };
   }
 

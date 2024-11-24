@@ -10,7 +10,8 @@ import React, { useEffect } from "react";
 import { Analytics } from "@vercel/analytics/react";
 import NProgress from "nprogress";
 import "nprogress/nprogress.css";
-import { AppProvider } from "@/lib/context";
+import { Provider } from "react-redux";
+import dynamic from "next/dynamic";
 
 export type NextPageWithLayout<P = {}, IP = P> = NextPage<P, IP> & {
   getLayout?: (page: ReactElement) => ReactNode;
@@ -21,6 +22,8 @@ type AppPropsWithLayout = AppProps & {
 };
 
 function App({ Component, pageProps }: AppPropsWithLayout) {
+  const { store, props } = wrapper.useWrappedStore(pageProps);
+
   const getLayout = Component.getLayout ?? ((page) => page);
   const router = useRouter();
 
@@ -45,13 +48,17 @@ function App({ Component, pageProps }: AppPropsWithLayout) {
   }, [router]);
 
   return (
-    <ChakraProvider>
-      <AppProvider>
-        <DefaultLayout>{getLayout(<Component {...pageProps} />)}</DefaultLayout>
-      </AppProvider>
+    <Provider store={store}>
+      <ChakraProvider>
+        <DefaultLayout>
+          {getLayout(<Component {...props.pageProps} />)}
+        </DefaultLayout>
+      </ChakraProvider>
       <Analytics />
-    </ChakraProvider>
+    </Provider>
   );
 }
 
-export default wrapper.withRedux(App);
+export default dynamic(() => Promise.resolve(App), {
+  ssr: false,
+});

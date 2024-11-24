@@ -1,5 +1,12 @@
 import React, { ReactElement, useState, useEffect } from "react";
-import { Box, Heading, Text, Accordion } from "@chakra-ui/react";
+import {
+  Box,
+  Heading,
+  Text,
+  Accordion,
+  Container,
+  Skeleton,
+} from "@chakra-ui/react";
 import Head from "next/head";
 import LearnLayout from "@/components/layouts/learn";
 import { GetServerSideProps, InferGetServerSidePropsType } from "next";
@@ -10,54 +17,87 @@ import {
 } from "@/services/authenticate";
 import { api } from "@/services/api";
 import { SyllabiWeek } from "@/components/week";
-import { useDispatch } from "react-redux";
-import { setHeadState, setNavState } from "@/store/learnNavSlice";
+import { useAppDispatch, useAppSelector } from "@/store/hooks";
+import {
+  fetchEnrolledCurriculum,
+  selectEnrolledCurriculum,
+  selectFetchingEnrolledCurriculum,
+} from "@/store/curriculumThunk";
+import { useRouter } from "next/router";
+import { setLoading, setHeadState, setNavState } from "@/store/learnNavSlice";
 
-export default function Page({
-  data,
-}: InferGetServerSidePropsType<typeof getServerSideProps>) {
-  const dispatch = useDispatch();
+export default function Page() {
+  const dispatch = useAppDispatch();
+  const curriculum = useAppSelector(selectEnrolledCurriculum);
+  const fetching = useAppSelector(selectFetchingEnrolledCurriculum);
+  const router = useRouter();
 
   useEffect(() => {
+    dispatch(setLoading(true));
+    // @ts-ignore
+    dispatch(fetchEnrolledCurriculum(router.query.slug as string))
+      .unwrap()
+      .then(() => {
+        dispatch(setLoading(false));
+      });
+  }, [dispatch, router.query.slug]);
+
+  useEffect(() => {
+    if (!curriculum) return;
     dispatch(
       setNavState(
-        data.syllabus.map((item, index) => {
+        curriculum.syllabus.map((item, index) => {
           if (item.topics.length == 0) {
             throw new Error("Invalid response");
           }
           return {
-            name: `Week ${index + 1}`,
+            name: item.title,
             completed: item.completed,
-            link: `/app/curriculum/learn/${data.slug}/${item.topics[0].slug}`,
+            link: `/app/curriculum/learn/${curriculum.slug}/${item.topics[0].slug}`,
           };
         })
       )
     );
+    dispatch(setHeadState(curriculum.name));
+  }, [dispatch, curriculum]);
 
-    dispatch(setHeadState(data.name));
-  }, [dispatch, data]);
+  if (fetching) {
+    return (
+      <Box>
+        <Skeleton height={"300px"} width={"100%"} mb={5} />
+      </Box>
+    );
+  }
+
+  if (!curriculum) {
+    return (
+      <Box>
+        <Text>Curriculum not found.</Text>
+      </Box>
+    );
+  }
 
   return (
     <>
       <Head>
-        <title>RoadflowAI - {data.name}</title>
+        <title>RoadflowAI - {curriculum.name}</title>
       </Head>
 
-      <Box className="topic-content" py={5}>
+      <Box className="topic-content">
         <Heading size={"md"} mb={4} textTransform={"uppercase"}>
           Description
         </Heading>
-        <Text lineHeight={1.8}>{data.description}</Text>
+        <Text lineHeight={1.8}>{curriculum.description}</Text>
 
         <Heading size={"md"} mt={10} mb={4} textTransform={"uppercase"}>
           Objective
         </Heading>
-        <Text>{data.objective}</Text>
+        <Text>{curriculum.objective}</Text>
 
         <Heading size={"md"} mt={10} mb={4} textTransform={"uppercase"}>
           Prerequisites
         </Heading>
-        <Text lineHeight={1.8}>{data.prerequisites}</Text>
+        <Text lineHeight={1.8}>{curriculum.prerequisites}</Text>
 
         <Box mt={"3rem"}>
           <Box>
@@ -67,7 +107,7 @@ export default function Page({
           </Box>
 
           <Accordion mt={"3rem"} defaultIndex={[0]} allowMultiple>
-            {data.syllabus.map((item, index) => {
+            {curriculum.syllabus.map((item, index) => {
               return (
                 <SyllabiWeek
                   key={index}
@@ -86,33 +126,4 @@ export default function Page({
 
 Page.getLayout = function getLayout(page: ReactElement) {
   return <LearnLayout>{page}</LearnLayout>;
-};
-
-export const getServerSideProps: GetServerSideProps<{
-  data: EnrolledCurriculumPageResponse;
-}> = async ({ params, req }) => {
-  if (!params) {
-    return {
-      notFound: true,
-    };
-  }
-
-  const { slug } = params;
-  api.getAccessToken = () => getAccessTokenServerSide(req);
-  const response = await api.get_single_enrolled_curriculum(slug as string);
-  const check = checkServerSideResponse(response, req);
-  if (check) {
-    return check;
-  }
-
-  const data = response.result.data;
-  if (!data) {
-    throw new Error("Invalid response");
-  }
-
-  return {
-    props: {
-      data,
-    },
-  };
 };

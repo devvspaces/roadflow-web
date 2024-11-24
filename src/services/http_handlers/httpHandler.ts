@@ -1,29 +1,38 @@
 import { DynamicObject } from "@/common/interfaces";
 import { RequestOption } from "../base";
 
-
 /**
  * BaseHttpHandler - this provides the base http handler methods
  * to be extended by other http handlers.
  */
 export interface _Response<T = unknown> {
-  status: number,
-  data?: T,
-  headers?: DynamicObject,
-  statusText?: string,
+  status: number;
+  data?: T;
+  headers?: DynamicObject;
+  statusText?: string;
 }
 
 export class BaseHttpHandler {
-
-  async get<T = unknown>(url: string, options: RequestOption): Promise<_Response<T>> {
+  async get<T = unknown>(
+    url: string,
+    options: RequestOption
+  ): Promise<_Response<T>> {
     throw new Error("Not implemented");
   }
 
-  async post<T = unknown>(url: string, options: RequestOption): Promise<_Response<T>> {
+  async post<T = unknown>(
+    url: string,
+    data: any,
+    options: RequestOption
+  ): Promise<_Response<T>> {
     throw new Error("Not implemented");
   }
 
-  async put<T = unknown>(url: string, options: RequestOption): Promise<_Response<T>> {
+  async put<T = unknown>(
+    url: string,
+    data: any,
+    options: RequestOption
+  ): Promise<_Response<T>> {
     throw new Error("Not implemented");
   }
 
@@ -31,18 +40,17 @@ export class BaseHttpHandler {
     throw new Error("Not implemented");
   }
 
-  async patch<T = unknown>(url: string, options: RequestOption): Promise<_Response<T>> {
+  async patch<T = unknown>(
+    url: string,
+    data: any,
+    options: RequestOption
+  ): Promise<_Response<T>> {
     throw new Error("Not implemented");
   }
 }
 
-
 export class HttpHandlerError<T = unknown> extends Error {
-  constructor(
-      message?: string,
-      status?: number,
-      response?: _Response<T>
-  ) {
+  constructor(message?: string, status?: number, response?: _Response<T>) {
     super(message);
     this.response = response;
     this.status = status;

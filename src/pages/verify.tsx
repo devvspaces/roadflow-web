@@ -1,5 +1,5 @@
 import { VERIFY_EMAIL_KEY } from "@/common/constants";
-import { LOGIN_URL } from "@/router/routes";
+import { HOME_URL, LOGIN_URL } from "@/router/routes";
 import { api } from "@/services/api";
 import {
   Button,
@@ -12,15 +12,34 @@ import {
   PinInput,
   PinInputField,
   FormErrorMessage,
+  useToast,
 } from "@chakra-ui/react";
 import { useFormik } from "formik";
-import Cookies from "js-cookie";
 import * as Yup from "yup";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { AlertType, addMessage } from "@/common/alerts";
+import { useAppDispatch, useAppSelector } from "@/store/hooks";
+import { selectVerifyEmail, setUser, setVerifyEmail } from "@/store/authSlice";
+import { useRouter } from "next/router";
+import { authenticate } from "@/services/authenticate";
 
 export default function ForgotPasswordOtpForm(): JSX.Element {
+  const dispatch = useAppDispatch();
+  const email = useAppSelector(selectVerifyEmail);
   const [otp, setOtp] = useState("");
+  const toast = useToast();
+  const router = useRouter();
+  const [resendIn, setResendIn] = useState(60);
+  const [resending, setResending] = useState(false);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      if (resendIn > 0) {
+        setResendIn(resendIn - 1);
+      }
+    }, 1000);
+    return () => clearInterval(interval);
+  }, [resendIn]);
 
   const formik = useFormik({
     initialValues: {
@@ -30,23 +49,49 @@ export default function ForgotPasswordOtpForm(): JSX.Element {
       otp: Yup.string().required("Required").min(6, "Invalid OTP"),
     }),
     onSubmit: async (values, { setFieldError }) => {
-      const email = Cookies.get(VERIFY_EMAIL_KEY);
-      if (email == undefined) {
-        throw new Error("Email cookie not found");
+      if (!email) {
+        toast({
+          title: "Invalid OTP",
+          status: "error",
+          duration: 5000,
+          position: "top",
+          isClosable: true,
+        });
+        router.push(LOGIN_URL);
+        return;
       }
 
       const response = await api.verify_account(email, values.otp);
       if (response.success) {
         if (response.result.data) {
-          Cookies.remove(VERIFY_EMAIL_KEY);
+          dispatch(setVerifyEmail(null));
+          dispatch(setUser(response.result.data.user));
+          authenticate(response.result.data);
           addMessage(
             AlertType.Success,
             "Account verified successfully! Please login to continue."
           );
-          window.location.href = LOGIN_URL;
+          toast({
+            title: "Congratulations!",
+            description: "Start learning now!",
+            status: "success",
+            duration: 5000,
+            position: "top",
+            isClosable: true,
+          });
+          router.push(HOME_URL);
         }
-        throw new Error("Invalid response");
+        return;
       }
+
+      toast({
+        title: "Verification failed",
+        description: "Invalid OTP",
+        status: "error",
+        duration: 5000,
+        position: "top",
+        isClosable: true,
+      });
 
       const fields = ["otp"];
       fields.forEach((field) => {
@@ -94,7 +139,7 @@ export default function ForgotPasswordOtpForm(): JSX.Element {
           <HStack justify={"center"} py={3}>
             <PinInput
               id="otp"
-              size={"lg"}
+              size={{ base: "md", md: "lg" }}
               placeholder="🔒"
               onChange={(value) => {
                 setOtp(value);
@@ -110,9 +155,65 @@ export default function ForgotPasswordOtpForm(): JSX.Element {
               <PinInputField width={20} height={20} />
             </PinInput>
           </HStack>
-          <Text fontSize={"sm"} color="red.300">
-            {formik.errors.otp}
-          </Text>
+          <HStack justify={"space-between"} py={3}>
+            <Text fontSize={"sm"} color="red.300">
+              {formik.errors.otp}
+            </Text>
+            <Button
+              size="sm"
+              variant="link"
+              isDisabled={resendIn > 0}
+              isLoading={resending}
+              onClick={() => {
+                if (resendIn === 0) {
+                  if (!email) {
+                    toast({
+                      title: "Error resending OTP",
+                      description:
+                        "Please try again later or contact our support team.",
+                      status: "error",
+                      duration: 5000,
+                      position: "top",
+                      isClosable: true,
+                    });
+                    router.push(LOGIN_URL);
+                    return;
+                  }
+                  setResending(true);
+                  api
+                    .resend_otp(email)
+                    .then((response) => {
+                      setResending(false);
+                      if (response.success) {
+                        setResendIn(60);
+                        toast({
+                          title: "OTP Sent",
+                          description: "Please check your email for the OTP.",
+                          status: "success",
+                          duration: 5000,
+                          position: "top",
+                          isClosable: true,
+                        });
+                      }
+                    })
+                    .catch(() => {
+                      setResending(false);
+                      toast({
+                        title: "Error resending OTP",
+                        description:
+                          "Please try again later or contact our support team.",
+                        status: "error",
+                        duration: 5000,
+                        position: "top",
+                        isClosable: true,
+                      });
+                    });
+                }
+              }}
+            >
+              Resend OTP {resendIn > 0 ? `in ${resendIn}s` : ""}
+            </Button>
+          </HStack>
           <Stack spacing={6}>
             <Button
               bg={"blue.400"}
@@ -122,6 +223,7 @@ export default function ForgotPasswordOtpForm(): JSX.Element {
               _hover={{
                 bg: "blue.500",
               }}
+              isLoading={formik.isSubmitting}
             >
               Verify
             </Button>

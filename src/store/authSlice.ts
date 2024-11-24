@@ -1,15 +1,33 @@
 import { createSlice } from "@reduxjs/toolkit";
 import { HYDRATE } from "next-redux-wrapper";
 import { AppState } from "./store";
+import { USER_KEY, VERIFY_EMAIL_KEY } from "@/common/constants";
+import { User } from "@/common/interfaces/user";
 
-// Type for our state
 export interface AuthState {
-  authState: boolean[];
+  user: User | null;
+  verifyEmail: string | null;
 }
+
+const loadUser = () => {
+  if (typeof window !== "undefined") {
+    const userData = localStorage.getItem(USER_KEY);
+    return userData ? JSON.parse(userData) : null;
+  }
+  return null;
+};
+
+const loadEmail = () => {
+  if (typeof window !== "undefined") {
+    return localStorage.getItem(VERIFY_EMAIL_KEY);
+  }
+  return null;
+};
 
 // Initial state
 const initialState: AuthState = {
-  authState: [false],
+  user: loadUser(),
+  verifyEmail: loadEmail(),
 };
 
 // Actual Slice
@@ -17,9 +35,13 @@ export const authSlice = createSlice({
   name: "auth",
   initialState,
   reducers: {
-    // Action to set the authentication status
-    setAuthState(state, action) {
-      state.authState = action.payload;
+    setUser(state, action) {
+      state.user = action.payload;
+      localStorage.setItem(USER_KEY, JSON.stringify(action.payload));
+    },
+    setVerifyEmail(state, action) {
+      state.verifyEmail = action.payload;
+      localStorage.setItem(VERIFY_EMAIL_KEY, action.payload);
     },
   },
 
@@ -29,14 +51,15 @@ export const authSlice = createSlice({
       return {
         ...state,
         // @ts-ignore: Unreachable code error
-        ...action.payload.nav,
+        ...action.payload.auth,
       };
     });
   },
 });
 
-export const { setAuthState } = authSlice.actions;
+export const { setUser, setVerifyEmail } = authSlice.actions;
 
-export const selectAuthState = (state: AppState) => state.auth.authState;
+export const selectUser = (state: AppState) => state.auth.user;
+export const selectVerifyEmail = (state: AppState) => state.auth.verifyEmail;
 
 export default authSlice.reducer;

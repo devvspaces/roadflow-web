@@ -26,23 +26,16 @@ import Cookies from "js-cookie";
 import { useState } from "react";
 import * as Yup from "yup";
 import NextLink from "next/link";
-import {
-  GoogleAuthProvider,
-  signInWithPopup,
-  getAuth,
-  TwitterAuthProvider,
-  GithubAuthProvider,
-} from "firebase/auth";
-import { LoginResponse } from "@/common/interfaces/login";
-import { app } from "../lib/firebase";
-import { FaGithub } from "react-icons/fa";
-import { FcGoogle } from "react-icons/fc";
-import { BsTwitterX } from "react-icons/bs";
+import { useAppDispatch } from "@/store/hooks";
+import { setUser, setVerifyEmail } from "@/store/authSlice";
+import { useRouter } from "next/router";
+import { useSocialAuth } from "@/hooks/useSocialAuth";
 
 export default function Page() {
-  const [loading, setLoading] = useState<number | null>(null);
+  const dispatch = useAppDispatch();
   const [showPassword, setShowPassword] = useState(false);
   const toast = useToast();
+  const router = useRouter();
 
   const formik = useFormik({
     initialValues: {
@@ -57,10 +50,20 @@ export default function Page() {
       const response = await api.login(values.email, values.password);
       if (response.success) {
         if (response.result.data) {
+          dispatch(setUser(response.result.data.user));
           authenticate(response.result.data);
-          window.location.href = HOME_URL;
+          // window.location.href = HOME_URL;
+          toast({
+            title: "Login successful",
+            description: "Welcome back!",
+            status: "success",
+            duration: 5000,
+            position: "top",
+            isClosable: true,
+          });
+          router.push(HOME_URL);
         }
-        throw new Error("Invalid response");
+        return;
       }
 
       if (response.result.data) {
@@ -73,8 +76,17 @@ export default function Page() {
           Please check your email for otp to verify your account.
           `
           );
-          Cookies.set(VERIFY_EMAIL_KEY, values.email);
-          window.location.href = VERIFY_ACCOUNT_URL;
+          toast({
+            title: "Verify your email first",
+            description:
+              "Please check your email for otp to verify your account.",
+            status: "success",
+            duration: 5000,
+            position: "top",
+            isClosable: true,
+          });
+          dispatch(setVerifyEmail(values.email));
+          router.push(VERIFY_ACCOUNT_URL);
         }
       }
 
@@ -89,171 +101,7 @@ export default function Page() {
     },
   });
 
-  const auth = getAuth(app);
-  auth.useDeviceLanguage();
-  function handle_login(data: LoginResponse) {
-    console.log(data);
-    const tokens = data.tokens;
-    if (!tokens) {
-      addMessage(
-        AlertType.Success,
-        `Sign-in successful! Please check your email for the OTP to verify your account and complete the process.`
-      );
-      Cookies.set(VERIFY_EMAIL_KEY, data.user.email);
-      window.location.href = VERIFY_ACCOUNT_URL;
-      return;
-    }
-    addMessage(AlertType.Success, `Login successful! Welcome back!`);
-    // toast({
-    //   title: "Login successful",
-    //   description: "Welcome back!",
-    //   status: "success",
-    //   duration: 5000,
-    //   position: "top",
-    //   isClosable: true,
-    // });
-    authenticate(data);
-    window.location.href = HOME_URL;
-    // navigate.push(HOME_URL);
-  }
-
-  const googleProvider = new GoogleAuthProvider();
-  googleProvider.addScope("https://www.googleapis.com/auth/userinfo.email");
-  function signUpWithGoogle() {
-    setLoading(0);
-    signInWithPopup(auth, googleProvider)
-      .then(async (result) => {
-        // This gives you a Google Access Token. You can use it to access Google APIs.
-        const credential = GoogleAuthProvider.credentialFromResult(result);
-        const token = credential?.accessToken;
-        // The signed-in user info.
-        const user = result.user;
-        if (!token) {
-          throw new Error("Token not found");
-        }
-        const response = await api.google(await user.getIdToken());
-        setLoading(null);
-        if (response.success) {
-          if (response.result.data) {
-            handle_login(response.result.data);
-            return;
-          }
-        }
-        throw new Error(
-          "Login with Google failed. Please try again, or contact support if the issue persists."
-        );
-      })
-      .catch((error) => {
-        setLoading(null);
-        console.error(error);
-        // Handle Errors here.
-        const errorCode = error.code;
-        const errorMessage = error.message;
-        // The email of the user's account used.
-        const email = error.email;
-        // The AuthCredential type that was used.
-        const credential = GoogleAuthProvider.credentialFromError(error);
-        toast({
-          title: "Failed to sign in with Google",
-          description: errorMessage,
-          status: "error",
-          duration: 5000,
-          isClosable: true,
-        });
-      });
-  }
-
-  const xProvider = new TwitterAuthProvider();
-  xProvider.addScope("user:read");
-  function signUpWithTwitter() {
-    setLoading(1);
-    signInWithPopup(auth, xProvider)
-      .then(async (result) => {
-        // For accessing the Twitter API.
-        const credential = TwitterAuthProvider.credentialFromResult(result);
-        const token = credential?.accessToken;
-        // The signed-in user info.
-        const user = result.user;
-        if (!token) {
-          throw new Error("Token not found");
-        }
-        const response = await api.twitter(await user.getIdToken());
-        setLoading(null);
-        if (response.success) {
-          if (response.result.data) {
-            handle_login(response.result.data);
-            return;
-          }
-        }
-        throw new Error(
-          "Login with X (formally Twitter) failed. Please try again, or contact support if the issue persists."
-        );
-      })
-      .catch((error) => {
-        setLoading(null);
-        console.error(error);
-        // Handle Errors here.
-        const errorCode = error.code;
-        const errorMessage = error.message;
-        // The email of the user's account used.
-        const email = error.email;
-        console.log(email);
-        // The AuthCredential type that was used.
-        const credential = TwitterAuthProvider.credentialFromError(error);
-        toast({
-          title: "Failed to sign in with X (formally Twitter)",
-          description: errorMessage,
-          status: "error",
-          duration: 5000,
-          isClosable: true,
-        });
-      });
-  }
-
-  const githubProvider = new GithubAuthProvider();
-  function signUpWithGithub() {
-    setLoading(2);
-    signInWithPopup(auth, githubProvider)
-      .then(async (result) => {
-        // For accessing the Github API.
-        const credential = GithubAuthProvider.credentialFromResult(result);
-        const token = credential?.accessToken;
-        // The signed-in user info.
-        const user = result.user;
-        if (!token) {
-          throw new Error("Token not found");
-        }
-        const response = await api.github(await user.getIdToken(), token);
-        setLoading(null);
-        if (response.success) {
-          if (response.result.data) {
-            handle_login(response.result.data);
-            return;
-          }
-        }
-        throw new Error(
-          "Login with Github failed. Please try again, or contact support if the issue persists."
-        );
-      })
-      .catch((error) => {
-        setLoading(null);
-        console.error(error);
-        // Handle Errors here.
-        const errorCode = error.code;
-        const errorMessage = error.message;
-        // The email of the user's account used.
-        const email = error.email;
-        // The AuthCredential type that was used.
-        const credential = GithubAuthProvider.credentialFromError(error);
-        toast({
-          title: "Failed to sign in with Github",
-          description: errorMessage,
-          status: "error",
-          duration: 5000,
-          isClosable: true,
-        });
-      });
-  }
+  const { renderButtons } = useSocialAuth();
 
   return (
     <Flex
@@ -264,9 +112,9 @@ export default function Page() {
     >
       <Stack spacing={8} mx={"auto"} maxW={"lg"} py={12} px={6}>
         <Stack align={"center"}>
-          <Heading fontSize={"4xl"}>Sign in to your account</Heading>
+          <Heading fontSize={"4xl"}>Welcome, back!</Heading>
           <Text fontSize={"lg"} color={"gray.600"}>
-            to enjoy all of our cool <Link color={"blue.400"}>features</Link> ✌️
+            Sign in to continue <Link color={"blue.400"}>learning</Link> ✌️
           </Text>
         </Stack>
 
@@ -339,39 +187,11 @@ export default function Page() {
                     _hover={{
                       bg: "blue.500",
                     }}
+                    isLoading={formik.isSubmitting}
                   >
                     Sign in
                   </Button>
-                  <Button
-                    onClick={signUpWithGoogle}
-                    size="lg"
-                    colorScheme="gray"
-                    color={"white"}
-                    rightIcon={<FcGoogle />}
-                    isLoading={loading == 0}
-                  >
-                    Google
-                  </Button>
-                  <Button
-                    onClick={signUpWithGithub}
-                    size="lg"
-                    colorScheme="gray"
-                    color={"white"}
-                    rightIcon={<FaGithub />}
-                    isLoading={loading == 2}
-                  >
-                    Github
-                  </Button>
-                  <Button
-                    onClick={signUpWithTwitter}
-                    size="lg"
-                    colorScheme="gray"
-                    color={"white"}
-                    rightIcon={<BsTwitterX />}
-                    isLoading={loading == 1}
-                  >
-                    X (Formally Twitter)
-                  </Button>
+                  {renderButtons()}
                 </Stack>
               </Stack>
 

@@ -1,57 +1,68 @@
 import React, { ReactElement, useEffect } from "react";
 import {
-  Wrap,
-  WrapItem,
-  AspectRatio,
-  UnorderedList,
-  ListItem,
-  HStack,
-  Badge,
   Flex,
   Box,
   FormControl,
   FormLabel,
   Input,
-  InputGroup,
-  InputRightElement,
   Stack,
   Button,
   Heading,
   Text,
-  useColorModeValue,
-  Link,
   FormErrorMessage,
   Textarea,
+  useToast,
+  Skeleton,
 } from "@chakra-ui/react";
 import Head from "next/head";
 import LearnLayout from "@/components/layouts/learn";
-import { FaExternalLinkAlt } from "react-icons/fa";
-import {
-  checkServerSideResponse,
-  getAccessTokenServerSide,
-} from "@/services/authenticate";
-import { GetServerSideProps, InferGetServerSidePropsType } from "next";
 import { CurriculumWithResources } from "@/common/interfaces/curriculum";
-import { getResource } from "@/common/interfaces/resource";
-import { useDispatch } from "react-redux";
-import { setHeadState, setNavState } from "@/store/learnNavSlice";
+import {
+  selectLoading,
+  setHeadState,
+  setLoading,
+  setNavState,
+} from "@/store/learnNavSlice";
 
 import { useState } from "react";
-import { ViewIcon, ViewOffIcon } from "@chakra-ui/icons";
 import { useFormik } from "formik";
 import * as Yup from "yup";
 import { api } from "@/services/api";
-import { LOGIN_URL, VERIFY_ACCOUNT_URL } from "@/router/routes";
-import { AlertType, addMessage } from "@/common/alerts";
-import Cookies from "js-cookie";
-import { VERIFY_EMAIL_KEY } from "@/common/constants";
+import { useAppDispatch, useAppSelector } from "@/store/hooks";
+import { useRouter } from "next/router";
 
-export default function Page({
-  data,
-}: InferGetServerSidePropsType<typeof getServerSideProps>) {
-  const dispatch = useDispatch();
+export default function Page() {
+  const dispatch = useAppDispatch();
+  const router = useRouter();
+  const toast = useToast();
+
+  const loading = useAppSelector(selectLoading);
+  const [data, setData] = useState<CurriculumWithResources | null>(null);
 
   useEffect(() => {
+    (async () => {
+      dispatch(setLoading(true));
+      const res = await api.get_curriculum_with_resources(
+        router.query.slug as string
+      );
+      if (res.success) {
+        setData(res.result.data!!);
+      } else {
+        toast({
+          title: "Failed to load topic",
+          description:
+            "Please try again, if the problem persists contact our support team",
+          status: "error",
+          duration: 9000,
+          isClosable: true,
+        });
+      }
+      dispatch(setLoading(false));
+    })();
+  }, [dispatch, toast, router.query.slug]);
+
+  useEffect(() => {
+    if (!data) return;
     dispatch(
       setNavState(
         data.syllabus.map((item, index) => {
@@ -66,7 +77,6 @@ export default function Page({
         })
       )
     );
-
     dispatch(setHeadState(data.name));
   }, [dispatch, data]);
 
@@ -80,7 +90,7 @@ export default function Page({
       review: Yup.string().required("Required"),
     }),
     onSubmit: async (values, { setFieldError, resetForm }) => {
-      const response = await api.review(data.slug, values);
+      const response = await api.review(data!!.slug, values);
       if (response.success) {
         if (response.result.data) {
           window.location.reload();
@@ -99,6 +109,22 @@ export default function Page({
       });
     },
   });
+
+  if (loading) {
+    return (
+      <Box>
+        <Skeleton height={"300px"} width={"100%"} mb={5} />
+      </Box>
+    );
+  }
+
+  if (!data) {
+    return (
+      <Box>
+        <Text>Course not found.</Text>
+      </Box>
+    );
+  }
 
   return (
     <>
@@ -169,33 +195,4 @@ export default function Page({
 
 Page.getLayout = function getLayout(page: ReactElement) {
   return <LearnLayout>{page}</LearnLayout>;
-};
-
-export const getServerSideProps: GetServerSideProps<{
-  data: CurriculumWithResources;
-}> = async ({ params, req }) => {
-  if (!params) {
-    return {
-      notFound: true,
-    };
-  }
-
-  const { slug } = params;
-  api.getAccessToken = () => getAccessTokenServerSide(req);
-  const response = await api.get_curriculum_with_resources(slug as string);
-  const check = checkServerSideResponse(response, req);
-  if (check) {
-    return check;
-  }
-
-  const data = response.result.data;
-  if (!data) {
-    throw new Error("Invalid response");
-  }
-
-  return {
-    props: {
-      data,
-    },
-  };
 };

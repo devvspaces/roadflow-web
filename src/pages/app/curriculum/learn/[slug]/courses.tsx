@@ -1,4 +1,4 @@
-import React, { ReactElement, useEffect } from "react";
+import React, { ReactElement, useEffect, useState } from "react";
 import {
   Box,
   Heading,
@@ -6,32 +6,57 @@ import {
   Link,
   Wrap,
   WrapItem,
-  AspectRatio,
-  UnorderedList,
-  ListItem,
   HStack,
   Badge,
+  useToast,
+  Skeleton,
 } from "@chakra-ui/react";
 import Head from "next/head";
 import LearnLayout from "@/components/layouts/learn";
 import { FaExternalLinkAlt } from "react-icons/fa";
-import {
-  checkServerSideResponse,
-  getAccessTokenServerSide,
-} from "@/services/authenticate";
 import { api } from "@/services/api";
-import { GetServerSideProps, InferGetServerSidePropsType } from "next";
 import { CurriculumWithResources } from "@/common/interfaces/curriculum";
 import { getResource } from "@/common/interfaces/resource";
-import { useDispatch } from "react-redux";
-import { setHeadState, setNavState } from "@/store/learnNavSlice";
+import { useRouter } from "next/router";
+import { useAppDispatch, useAppSelector } from "@/store/hooks";
+import {
+  setLoading,
+  setHeadState,
+  setNavState,
+  selectLoading,
+} from "@/store/learnNavSlice";
 
-export default function Page({
-  data,
-}: InferGetServerSidePropsType<typeof getServerSideProps>) {
-  const dispatch = useDispatch();
+export default function Page() {
+  const dispatch = useAppDispatch();
+  const loading = useAppSelector(selectLoading);
+  const [data, setData] = useState<CurriculumWithResources | null>(null);
+  const router = useRouter();
+  const { slug } = router.query;
+  const toast = useToast();
 
   useEffect(() => {
+    (async () => {
+      dispatch(setLoading(true));
+      const res = await api.get_curriculum_with_resources(slug as string);
+      if (res.success) {
+        setData(res.result.data!!);
+      } else {
+        toast({
+          title: "Failed to find resources",
+          description:
+            "Please try again, if the problem persists contact our support team",
+          status: "error",
+          duration: 9000,
+          position: "top",
+          isClosable: true,
+        });
+      }
+      dispatch(setLoading(false));
+    })();
+  }, [dispatch, toast, slug]);
+
+  useEffect(() => {
+    if (!data) return;
     dispatch(
       setNavState(
         data.syllabus.map((item, index) => {
@@ -39,21 +64,37 @@ export default function Page({
             throw new Error("Invalid response");
           }
           return {
-            name: `Week ${index + 1}`,
+            name: item.title,
             completed: item.completed,
             link: `/app/curriculum/learn/${data.slug}/${item.topics[0].slug}`,
           };
         })
       )
     );
-
     dispatch(setHeadState(data.name));
   }, [dispatch, data]);
+
+  if (loading) {
+    return (
+      <HStack gap={5}>
+        <Skeleton height={"200px"} width={"200px"} />
+        <Skeleton height={"200px"} width={"200px"} />
+      </HStack>
+    );
+  }
+
+  if (!data) {
+    return (
+      <Box>
+        <Text>Course not found.</Text>
+      </Box>
+    );
+  }
 
   return (
     <>
       <Head>
-        <title>RoadflowAI- {data.name} (External Courses) </title>
+        <title>RoadflowAI - {data.name} (External Courses) </title>
       </Head>
 
       <Heading size={"md"}>External Courses</Heading>
@@ -122,33 +163,4 @@ export default function Page({
 
 Page.getLayout = function getLayout(page: ReactElement) {
   return <LearnLayout>{page}</LearnLayout>;
-};
-
-export const getServerSideProps: GetServerSideProps<{
-  data: CurriculumWithResources;
-}> = async ({ params, req }) => {
-  if (!params) {
-    return {
-      notFound: true,
-    };
-  }
-
-  const { slug } = params;
-  api.getAccessToken = () => getAccessTokenServerSide(req);
-  const response = await api.get_curriculum_with_resources(slug as string);
-  const check = checkServerSideResponse(response, req);
-  if (check) {
-    return check;
-  }
-
-  const data = response.result.data;
-  if (!data) {
-    throw new Error("Invalid response");
-  }
-
-  return {
-    props: {
-      data,
-    },
-  };
 };

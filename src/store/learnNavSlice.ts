@@ -7,13 +7,15 @@ import build from "next/dist/build";
 // Type for our state
 export interface LearnNavState {
   navState: LearnNav[];
+  loading: boolean;
   headState: string;
 }
 
 // Initial state
 const initialState: LearnNavState = {
   navState: [],
-  headState: ""
+  loading: false,
+  headState: "",
 };
 
 // Actual Slice
@@ -21,16 +23,15 @@ export const learnNavSlice = createSlice({
   name: "nav",
   initialState,
   reducers: {
-    // Action to set the nav list
     setNavState(state, action) {
       state.navState = action.payload;
     },
-    // Action to set the nav heading
+    setLoading(state, action) {
+      state.loading = action.payload;
+    },
     setHeadState(state, action) {
       state.headState = action.payload;
     },
-
-    
   },
 
   // Special reducer for hydrating the state. Special case for next-redux-wrapper
@@ -43,12 +44,12 @@ export const learnNavSlice = createSlice({
       };
     });
   },
-  
 });
 
-export const { setNavState, setHeadState } = learnNavSlice.actions;
+export const { setNavState, setHeadState, setLoading } = learnNavSlice.actions;
 
 export const selectNavState = (state: AppState) => state.nav.navState;
 export const selectHeadState = (state: AppState) => state.nav.headState;
+export const selectLoading = (state: AppState) => state.nav.loading;
 
 export default learnNavSlice.reducer;
