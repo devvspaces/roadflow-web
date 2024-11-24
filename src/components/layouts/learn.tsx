@@ -215,7 +215,7 @@ export default function LearnLayout({ children }: LearnLayoutProps) {
                     display={"flex"}
                     alignItems={"center"}
                   >
-                    <ChevronLeftIcon fontSize={"1.5rem"} /> Back
+                    <ChevronLeftIcon fontSize={"1.5rem"} /> Modules
                   </BreadcrumbLink>
                 </BreadcrumbItem>
               </Breadcrumb>

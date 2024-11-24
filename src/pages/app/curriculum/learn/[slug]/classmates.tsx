@@ -19,7 +19,7 @@ export default function Page() {
   return (
     <>
       <Head>
-        <title>RoadflowAI- Classmate</title>
+        <title>RoadflowAI - Classmate</title>
       </Head>
 
       <Heading size={"md"}>Classmates</Heading>

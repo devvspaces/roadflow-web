@@ -61,7 +61,7 @@ export default function Page() {
     dispatch(setHeadState(curriculum.name));
   }, [dispatch, curriculum]);
 
-  if (fetching) {
+  if (fetching || !curriculum) {
     return (
       <Box>
         <Skeleton height={"300px"} width={"100%"} mb={5} />

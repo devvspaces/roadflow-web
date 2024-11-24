@@ -109,7 +109,7 @@ export default function Page() {
     }
   };
 
-  if (loading) {
+  if (loading || !data) {
     return (
       <Box>
         <Skeleton height={"300px"} width={"100%"} mb={5} />

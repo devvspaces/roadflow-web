@@ -79,7 +79,7 @@ export default function Page() {
     dispatch(setHeadState(data.curriculum.name));
   }, [dispatch, data]);
 
-  if (loading) {
+  if (loading || !data) {
     return (
       <Box>
         <Skeleton height={"200px"} width={"100%"} />

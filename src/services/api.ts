@@ -339,7 +339,7 @@ export class ApiService extends BaseApiClient {
     );
   }
 
-  async review(slug: string, body: { review: string; rating: string }) {
+  async review(slug: string, body: { review: string; rating: number }) {
     return this.post<{ curriculum: string }>(
       "/curriculum/submit-review/{slug}",
       this.authorize({
@@ -347,7 +347,7 @@ export class ApiService extends BaseApiClient {
           slug,
         },
         body: {
-          rating: parseInt(body.rating),
+          rating: body.rating,
           review: body.review,
         },
       })

@@ -74,7 +74,7 @@ export default function Page() {
     dispatch(setHeadState(data.name));
   }, [dispatch, data]);
 
-  if (loading) {
+  if (loading || !data) {
     return (
       <HStack gap={5}>
         <Skeleton height={"200px"} width={"200px"} />

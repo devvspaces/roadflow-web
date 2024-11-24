@@ -13,6 +13,7 @@ import {
   Textarea,
   useToast,
   Skeleton,
+  Select,
 } from "@chakra-ui/react";
 import Head from "next/head";
 import LearnLayout from "@/components/layouts/learn";
@@ -70,7 +71,7 @@ export default function Page() {
             throw new Error("Invalid response");
           }
           return {
-            name: `Week ${index + 1}`,
+            name: item.title,
             completed: item.completed,
             link: `/app/curriculum/learn/${data.slug}/${item.topics[0].slug}`,
           };
@@ -82,21 +83,41 @@ export default function Page() {
 
   const formik = useFormik({
     initialValues: {
-      rating: "",
+      rating: 5,
       review: "",
     },
     validationSchema: Yup.object({
       rating: Yup.number().required("Required").max(5).min(1),
       review: Yup.string().required("Required"),
     }),
-    onSubmit: async (values, { setFieldError, resetForm }) => {
+    onSubmit: async (values, { setFieldError, resetForm, setFieldValue }) => {
       const response = await api.review(data!!.slug, values);
       if (response.success) {
         if (response.result.data) {
-          window.location.reload();
-          return;
+          toast({
+            title: "Thank You for Your Review!",
+            description:
+              "We appreciate your feedback and are pleased to inform you that your review has been successfully submitted. Your insights help us improve and serve you better.",
+            status: "success",
+            duration: 9000,
+            isClosable: true,
+            position: "top",
+          });
+          resetForm();
         }
-        throw new Error("Invalid response");
+        return;
+      }
+
+      if (response.status !== 400) {
+        toast({
+          title: "Failed to submit review",
+          description:
+            "Please try again, if the problem persists contact our support team",
+          status: "error",
+          duration: 9000,
+          isClosable: true,
+          position: "top",
+        });
       }
 
       const fields = Object.keys(values);
@@ -110,7 +131,7 @@ export default function Page() {
     },
   });
 
-  if (loading) {
+  if (loading || !data) {
     return (
       <Box>
         <Skeleton height={"300px"} width={"100%"} mb={5} />
@@ -125,6 +146,14 @@ export default function Page() {
       </Box>
     );
   }
+
+  const ratings: { [key: number]: string } = {
+    1: "Very poor",
+    2: "Poor",
+    3: "Average",
+    4: "Good",
+    5: "Excellent",
+  };
 
   return (
     <>
@@ -144,26 +173,38 @@ export default function Page() {
                   <Stack spacing={4}>
                     <FormControl
                       id="rating"
-                      onChange={formik.handleChange}
                       isInvalid={
                         !!formik.errors.rating && formik.touched.rating
                       }
                     >
                       <FormLabel>Rating</FormLabel>
-                      <Input type="number" />
+                      <Select
+                        placeholder="Select rating"
+                        value={formik.values.rating}
+                        onChange={formik.handleChange}
+                      >
+                        {[1, 2, 3, 4, 5].map((rating) => (
+                          <option key={rating} value={rating}>
+                            {rating} - {ratings[rating]}
+                          </option>
+                        ))}
+                      </Select>
                       <FormErrorMessage>
                         {formik.errors.rating}
                       </FormErrorMessage>
                     </FormControl>
                     <FormControl
                       id="review"
-                      onChange={formik.handleChange}
                       isInvalid={
                         !!formik.errors.review && formik.touched.review
                       }
                     >
                       <FormLabel>Review</FormLabel>
-                      <Textarea h={"10rem"} />
+                      <Textarea
+                        h={"10rem"}
+                        onChange={formik.handleChange}
+                        value={formik.values.review}
+                      />
                       <FormErrorMessage>
                         {formik.errors.review}
                       </FormErrorMessage>
@@ -171,13 +212,13 @@ export default function Page() {
                     <Stack pt={10}>
                       <Button
                         type="submit"
-                        loadingText="Submitting"
                         size="md"
                         bg={"blue.400"}
                         color={"white"}
                         _hover={{
                           bg: "blue.500",
                         }}
+                        isLoading={formik.isSubmitting}
                       >
                         Rate
                       </Button>
